@@ -1,15 +1,6 @@
 from pydantic import BaseModel
 
 
-class ConfigData(BaseModel):
-    train_parameter: dict
-    data_root: str
-    task: str
-    plant_model: dict
-    crop_model: dict
-    all_model: dict
-
-
 class TrainParameterData(BaseModel):
     max_epocks: int
     device: str
@@ -29,6 +20,15 @@ class CropModelData(BaseModel):
 class AllModelData(BaseModel):
     modeltype: str
     backborn: str
+
+
+class ConfigData(BaseModel):
+    train_parameter: TrainParameterData
+    data_root: str
+    task: str
+    plant_model: PlantModelData
+    crop_model: CropModelData
+    all_model: AllModelData
 
 
 if __name__ == '__main__':
