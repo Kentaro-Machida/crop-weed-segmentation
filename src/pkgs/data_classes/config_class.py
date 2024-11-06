@@ -1,7 +1,7 @@
-from dataclasses import dataclass
+from pydantic import BaseModel
 
-@dataclass
-class config_data_class:
+
+class ConfigData(BaseModel):
     train_parameter: dict
     data_root: str
     task: str
@@ -10,27 +10,27 @@ class config_data_class:
     all_model: dict
 
 
-@dataclass
-class train_parameter_data_class:
+class TrainParameterData(BaseModel):
     max_epocks: int
     device: str
     batch_size: int
 
 
-@dataclass
-class plant_model_data_class:
+class PlantModelData(BaseModel):
     patch_size: int
-    model_type: str
+    modeltype: str
 
 
-@dataclass
-class crop_model_data_class:
-    model_type: str
+class CropModelData(BaseModel):
+    modeltype: str
     backborn: str
 
 
-@dataclass
-class all_model_data_class:
-    model_type: str
+class AllModelData(BaseModel):
+    modeltype: str
     backborn: str
 
+
+if __name__ == '__main__':
+    all_model_data = AllModelData(modeltype="segformer", backborn="mobilenet_v2")
+    print(all_model_data)
