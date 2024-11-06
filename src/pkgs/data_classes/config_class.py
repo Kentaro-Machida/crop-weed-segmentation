@@ -26,6 +26,8 @@ class ConfigData(BaseModel):
     train_parameter: TrainParameterData
     data_root: str
     task: str
+    resized_image_height: int
+    resized_image_width: int
     plant_model: PlantModelData
     crop_model: CropModelData
     all_model: AllModelData
