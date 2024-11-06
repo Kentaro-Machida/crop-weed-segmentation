@@ -23,9 +23,11 @@ class BasePatchProcess(ABC):
 
         # image size have to be multiple of patch size
         assert image_height % patch_h == 0, \
-            f"image_height:{self.image_height} have to be multiple of patch_h:{self.patch_h}"
+            f"image_height:{self.image_height} have to be multiple of \
+                patch_h:{self.patch_h}"
         assert image_widht % patch_w == 0, \
-            f"image_widht:{self.image_widht} have to be multiple of patch_w:{self.patch_w}"
+            f"image_widht:{self.image_widht} have to be multiple of \
+                patch_w:{self.patch_w}"
 
     @abstractmethod
     def image_to_patches(self, image: np.ndarray) -> List[np.ndarray]:
