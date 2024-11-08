@@ -1,6 +1,7 @@
 import os
 import cv2
 import numpy as np
+from src.config import config
 
 def get_image_path(
         target_dir:str,
@@ -22,25 +23,31 @@ def load_image(
         path: str,
         reseized_height: int,
         reseized_width: int,
+        task: str,
         is_mask=False,
-        is_plant=False,
         )-> np.ndarray:
     """
     Load image from path and resize it.
     Return image as 3d np.ndarray.
     is_mask: If True, return image as mask.
-    is_plant: If True, return image as plant mask.
+    is_plant: If True, return image as plant mask(Background = 0, plant = 1).
     """
     img = cv2.imread(path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
     if is_mask:
-        if is_plant:
-            img = img[:,:,0] != 0
-            img = img.astype(np.uint8)
+        if task == "plant1d" or task == "plant2d":
+            img = img[:,:,0] != config["label"]["background"]
             img = img[:,:,np.newaxis]
-        else:
+        elif task == "all":
             img = img[:,:,0]
             img = img[:,:,np.newaxis]
+        elif task == "crop":
+            img = img[:,:,0] == config["label"]["crop"]
+            img = img[:,:,np.newaxis]
+        else:
+            raise ValueError(f"task: {task} is not supported")
+        img = img.astype(np.uint8)
         img = cv2.resize(img, (reseized_width, reseized_height), interpolation=cv2.INTER_NEAREST)
     else:
         img = cv2.resize(img, (reseized_width, reseized_height))
