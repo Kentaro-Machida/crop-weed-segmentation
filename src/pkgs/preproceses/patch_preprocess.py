@@ -13,13 +13,13 @@ class BasePatchProcess(ABC):
             patch_w: int,
             image_height: int,
             image_widht: int,
-            channels=3
+            channels=3,
             ):
         self.patch_h = patch_h
         self.patch_w = patch_w
         self.image_height = image_height
         self.image_widht = image_widht
-        self.channels = channels
+        self.channels = channels  # The number of channels of image
 
         # image size have to be multiple of patch size
         assert image_height % patch_h == 0, \
