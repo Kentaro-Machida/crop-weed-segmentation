@@ -2,9 +2,9 @@ import os
 from torch.utils.data import Dataset
 import numpy as np
 
-from src.pkgs.data_classes.config_class import ConfigData
-from src.pkgs.preproceses.patch_preprocess import PatchProcessor1d, PatchProcessor2d
-from src.utils.data_loads import get_image_path, load_image
+from pkgs.data_classes.config_class import ConfigData
+from pkgs.preproceses.patch_preprocess import PatchProcessor1d, PatchProcessor2d
+from utils.data_loads import get_image_path, load_image
 
 
 class DatasetFactory:
