@@ -1,7 +1,7 @@
 import os
 import cv2
 import numpy as np
-from src.config import config
+from config import config
 
 def get_image_path(
         target_dir:str,
