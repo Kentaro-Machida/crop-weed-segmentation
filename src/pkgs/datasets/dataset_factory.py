@@ -1,5 +1,5 @@
 import os
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 import numpy as np
 
 from pkgs.data_classes.config_class import ConfigData
@@ -25,33 +25,50 @@ class DatasetFactory:
         }
         """
         if self.config.task == "plant1d":
-            return {
-                "train": Plant1dDataset(self.config, "train"),
-                "val": Plant1dDataset(self.config, "val"),
-                "test": Plant1dDataset(self.config, "test")
-            }
+            return self._dataset_to_dataloader(
+                {
+                    "train": Plant1dDataset(self.config, "train"),
+                    "val": Plant1dDataset(self.config, "val"),
+                    "test": Plant1dDataset(self.config, "test"),
+                }
+            )
         elif self.config.task == "plant2d":
-            return {
-                "train": Plant2dDataset(self.config, "train"),
-                "val": Plant2dDataset(self.config, "val"),
-                "test": Plant2dDataset(self.config, "test")
-            }
+            return self._dataset_to_dataloader(
+                {
+                    "train": Plant2dDataset(self.config, "train"),
+                    "val": Plant2dDataset(self.config, "val"),
+                    "test": Plant2dDataset(self.config, "test"),
+                }
+            )
         elif self.config.task == "crop":
-            return {
-                "train": CropDataset(self.config, "train"),
-                "val": CropDataset(self.config, "val"),
-                "test": CropDataset(self.config, "test")
-            }
+            return self._dataset_to_dataloader(
+                {
+                    "train": CropDataset(self.config, "train"),
+                    "val": CropDataset(self.config, "val"),
+                    "test": CropDataset(self.config, "test")
+                }
+            )
         elif self.config.task == "all":
-            return {
-                "train": AllDataset(self.config, "train"),
-                "val": AllDataset(self.config, "val"),
-                "test": AllDataset(self.config, "test")
-            }
+            return self._dataset_to_dataloader(
+                {
+                    "train": AllDataset(self.config, "train"),
+                    "val": AllDataset(self.config, "val"),
+                    "test": AllDataset(self.config, "test")
+                }
+            )
         else:
             raise ValueError(
                 "Invalid task. Look the config file and check a task.")
 
+    def _dataset_to_dataloader(self, dataset_dict: dict) -> dict:
+        """
+        datasetをDataLoaderに変換
+        """
+        return {
+            "train": DataLoader(dataset_dict["train"], batch_size=self.config.train_parameter.batch_size),
+            "val": DataLoader(dataset_dict["val"], batch_size=self.config.train_parameter.batch_size),
+            "test": DataLoader(dataset_dict["test"], batch_size=self.config.train_parameter.batch_size)
+        }
 
 class BaseDataset(Dataset):
     def __init__(self, config: ConfigData, target_sub_dir:str):
