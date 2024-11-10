@@ -1,9 +1,13 @@
 import os
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
+import torch
+from transformers import SegformerImageProcessor
+
 
 from pkgs.data_classes.config_class import ConfigData
 from pkgs.preproceses.patch_preprocess import PatchProcessor1d, PatchProcessor2d
+from pkgs.preproceses.data_augmentation import DataTransformBuilder
 from utils.data_loads import get_image_path, load_image
 
 
@@ -90,6 +94,9 @@ class BaseDataset(Dataset):
         self.img_path_list = get_image_path(self._target_img_dir)
         self.mask_path_list = get_image_path(self._target_mask_dir)
 
+        # Data Augmentation
+        self.data_augmentator = DataTransformBuilder(config)
+
     def __len__(self):
         pass
 
@@ -135,6 +142,9 @@ class Plant1dDataset(BaseDataset):
     def __getitem__(self, idx):
         img_patch = self._img_patches[idx]
         mask_patch = self._mask_patches[idx]
+        img_patch, mask_patch = self.data_augmentator(
+            image=img_patch,mask = mask_patch
+        )
         return img_patch, mask_patch
 
 
@@ -176,6 +186,9 @@ class Plant2dDataset(BaseDataset):
     def __getitem__(self, idx):
         img_patch = self._img_patches[idx]
         mask_patch = self._mask_patches[idx]
+        img_patch, mask_patch = self.data_augmentator(
+            image=img_patch,mask = mask_patch
+        )
         return img_patch, mask_patch
 
 
@@ -192,19 +205,50 @@ class CropDataset(BaseDataset):
     def __getitem__(self, idx):
         img = load_image(self.img_path_list[idx], self.config.resized_image_height, self.config.resized_image_width, task="crop")
         mask = load_image(self.mask_path_list[idx], self.config.resized_image_height, self.config.resized_image_width, is_mask=True, task="crop")
+        img, mask = self.data_augmentator(
+            image=img, mask=mask
+        )
+        if self.config.model_type == "segformer":
+            img, mask = self.preprocessor(img, return_tensors="pt")
         return img, mask
 
 
 class AllDataset(BaseDataset):
     def __init__(self, config: ConfigData, target_sub_dir:str):
         super().__init__(config, target_sub_dir)
+        if self.config.model_type == "segformer":
+            self.preprocessor = SegformerImageProcessor.from_pretrained(config.segformer_pretrained_model)
 
     def __len__(self):
         return len(self.img_path_list)
 
     def __getitem__(self, idx):
-        img = load_image(self.img_path_list[idx], self.config.resized_image_height, self.config.resized_image_width, task="all")
-        mask = load_image(self.mask_path_list[idx], self.config.resized_image_height, self.config.resized_image_width, is_mask=True, task="all")
+        img = load_image(
+            self.img_path_list[idx],
+            self.config.resized_image_height,
+            self.config.resized_image_width,
+            task="all")
+        mask = load_image(
+            self.mask_path_list[idx],
+            self.config.resized_image_height,
+            self.config.resized_image_width,
+            is_mask=True,
+            task="all")
+        augmentated = self.data_augmentator(
+            image=img, mask=mask
+        )
+        img = augmentated["image"]
+        mask = augmentated["mask"]
+        if self.config.model_type == "segformer":
+            SegFormer_input = self.preprocessor(img, return_tensors="pt")
+            for k,v in SegFormer_input.items():
+                SegFormer_input[k].squeeze_()
+            mask = mask.astype(np.uint8)
+
+            mask_tensor = torch.from_numpy(mask)
+            mask_tensor = mask_tensor.long()
+            SegFormer_input['labels'] = mask_tensor
+            return SegFormer_input
         return img, mask
 
 

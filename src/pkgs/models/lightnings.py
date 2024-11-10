@@ -40,6 +40,7 @@ class Plant1dLightning(pl.LightningModule):
             number_of_layers=6
         )
         self.criterion = nn.BCEWithLogitsLoss()
+        self.lr = config.train_parameter.learning_rate
 
     def forward(self, x):
         return self.model(x)
@@ -107,7 +108,7 @@ class CropLightning(pl.LightningModule):
         self.config = config
         self._backborn = self.config.all_model.backborn
         assert self._backborn in ["resnet50", "resnet101", "mobilenet_v2"], "you should choose resnet50, resnet101 or mobilenet_v2"
-        self._model_type = self.config.all_model.modeltype
+        self._model_type = self.config.model_type
 
         self.criterion = torch.nn.CrossEntropyLoss()
         self.metric = BinaryJaccardIndex(threshold=0.5)
@@ -167,10 +168,11 @@ class AllLightning(pl.LightningModule):
         self.config = config
         self._backborn = self.config.all_model.backborn
         assert self._backborn in ["resnet50", "resnet101", "mobilenet_v2"], "you should choose resnet50, resnet101 or mobilenet_v2"
-        self._model_type = self.config.all_model.modeltype
+        self._model_type = self.config.model_type
 
         self.criterion = torch.nn.CrossEntropyLoss()
         self.metric = BinaryJaccardIndex(threshold=0.5)
+        self.lr = config.train_parameter.learning_rate
 
         if self._model_type == "unet":
             self.model = smp.Unet(
@@ -180,7 +182,7 @@ class AllLightning(pl.LightningModule):
             )
         elif self._model_type == "segformer":
             self.model = SegformerForSemanticSegmentation.from_pretrained(
-                pretrained_model_name_or_path="nvidia/segformer-b5-finetuned-cityscapes-1024-1024",
+                pretrained_model_name_or_path=config.segformer_pretrained_model,
                 num_labels=3,
                 ignore_mismatched_sizes=True
             )
