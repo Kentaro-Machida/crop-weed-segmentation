@@ -47,17 +47,17 @@ class DatasetFactory:
         elif self.config.task == "crop":
             return self._dataset_to_dataloader(
                 {
-                    "train": CropDataset(self.config, "train"),
-                    "val": CropDataset(self.config, "val"),
-                    "test": CropDataset(self.config, "test")
+                     "train": WholeImageDataset(self.config, "train", "crop"),
+                    "val": WholeImageDataset(self.config, "val", "crop"),
+                    "test": WholeImageDataset(self.config, "test", "crop")
                 }
             )
         elif self.config.task == "all":
             return self._dataset_to_dataloader(
                 {
-                    "train": AllDataset(self.config, "train"),
-                    "val": AllDataset(self.config, "val"),
-                    "test": AllDataset(self.config, "test")
+                    "train": WholeImageDataset(self.config, "train", "all"),
+                    "val": WholeImageDataset(self.config, "val", "all"),
+                    "test": WholeImageDataset(self.config, "test", "all")
                 }
             )
         else:
@@ -192,32 +192,18 @@ class Plant2dDataset(BaseDataset):
         return img_patch, mask_patch
 
 
-class CropDataset(BaseDataset):
+class WholeImageDataset(BaseDataset):
     """
-    Crop:1, The others:0 として定義されるデータセット
+    画像全体を入力とするデータセット
+    config: 実験用のconfig data
+    target_sub_dir: train | val | test のいずれかの文字列
+    task: all | crop のいずれかの文字列, allの場合は3クラス, cropの場合は2クラス
     """
-    def __init__(self, config: ConfigData, target_sub_dir:str):
-        super().__init__(config, target_sub_dir)
-
-    def __len__(self):
-        return len(self.img_path_list)
-
-    def __getitem__(self, idx):
-        img = load_image(self.img_path_list[idx], self.config.resized_image_height, self.config.resized_image_width, task="crop")
-        mask = load_image(self.mask_path_list[idx], self.config.resized_image_height, self.config.resized_image_width, is_mask=True, task="crop")
-        img, mask = self.data_augmentator(
-            image=img, mask=mask
-        )
-        if self.config.model_type == "segformer":
-            img, mask = self.preprocessor(img, return_tensors="pt")
-        return img, mask
-
-
-class AllDataset(BaseDataset):
-    def __init__(self, config: ConfigData, target_sub_dir:str):
+    def __init__(self, config: ConfigData, target_sub_dir:str, task:str):
         super().__init__(config, target_sub_dir)
         if self.config.model_type == "segformer":
             self.preprocessor = SegformerImageProcessor.from_pretrained(config.segformer_pretrained_model)
+            self.task = task
 
     def __len__(self):
         return len(self.img_path_list)
@@ -227,13 +213,13 @@ class AllDataset(BaseDataset):
             self.img_path_list[idx],
             self.config.resized_image_height,
             self.config.resized_image_width,
-            task="all")
+            task=self.task)
         mask = load_image(
             self.mask_path_list[idx],
             self.config.resized_image_height,
             self.config.resized_image_width,
             is_mask=True,
-            task="all")
+            task=self.task)
         augmentated = self.data_augmentator(
             image=img, mask=mask
         )
@@ -253,38 +239,42 @@ class AllDataset(BaseDataset):
 
 
 if __name__ == '__main__':
-    from src.config import config
+    from config import config
     config_data = ConfigData.load_data(config)
     plant_train = Plant1dDataset(config_data, "train")
     plant_val = Plant1dDataset(config_data, "val")
     plant_test = Plant1dDataset(config_data, "test")
-    print("----- Test for Plant1dDataset -----")
-    print(f"get_item: {plant_train.__getitem__(0)}")
-    print(f"length: {plant_train.__len__()}")
-    print(f"input image shape: {plant_train.__getitem__(0)[0].shape}")
-    print(f"mask image shape: {plant_train.__getitem__(0)[1].shape}")
-    print(f"unique mask: {np.unique(plant_train.__getitem__(0)[1])}")
+    if config_data.task == "plant1d":
+        print("----- Test for Plant1dDataset -----")
+        print(f"get_item: {plant_train.__getitem__(0)}")
+        print(f"length: {plant_train.__len__()}")
+        print(f"input image shape: {plant_train.__getitem__(0)[0].shape}")
+        print(f"mask image shape: {plant_train.__getitem__(0)[1].shape}")
+        print(f"unique mask: {np.unique(plant_train.__getitem__(0)[1])}")
 
-    plant_train = Plant2dDataset(config_data, "train")
-    print("----- Test for Plant2dDataset -----")
-    print(f"length: {plant_train.__len__()}")
-    print(f"input image shape: {plant_train.__getitem__(0)[0].shape}")
-    print(f"mask image shape: {plant_train.__getitem__(0)[1].shape}")
-    print(f"unique mask: {np.unique(plant_train.__getitem__(0)[1])}")
+    if config_data.task == "plant2d":
+        plant_train = Plant2dDataset(config_data, "train")
+        print("----- Test for Plant2dDataset -----")
+        print(f"length: {plant_train.__len__()}")
+        print(f"input image shape: {plant_train.__getitem__(0)[0].shape}")
+        print(f"mask image shape: {plant_train.__getitem__(0)[1].shape}")
+        print(f"unique mask: {np.unique(plant_train.__getitem__(0)[1])}")
 
-    crop_train = CropDataset(config_data, "train")
-    print("----- Test for CropDataset -----")
-    print(f"length: {crop_train.__len__()}")
-    print(f"input image shape: {crop_train.__getitem__(0)[0].shape}")
-    print(f"mask image shape: {crop_train.__getitem__(0)[1].shape}")
-    print(f"unique mask: {np.unique(crop_train.__getitem__(0)[1])}")
+    if config_data.task == "crop":
+        crop_train = WholeImageDataset(config_data, "train", "crop")
+        print("----- Test for CropDataset -----")
+        print(f"length: {crop_train.__len__()}")
+        print(f"input image shape: {crop_train.__getitem__(0)}")
+        print(f"mask image shape: {crop_train.__getitem__(0)}")
+        print(f"unique mask: {np.unique(crop_train.__getitem__(0))}")
 
-    all_train = AllDataset(config_data, "train")
-    print("----- Test for AllDataset -----")
-    print(f"length: {all_train.__len__()}")
-    print(f"input image shape: {all_train.__getitem__(0)[0].shape}")
-    print(f"mask image shape: {all_train.__getitem__(0)[1].shape}")
-    print(f"unique mask: {np.unique(all_train.__getitem__(0)[1])}") 
+    if config_data.task == "all":
+        all_train = WholeImageDataset(config_data, "train", "all")
+        print("----- Test for AllDataset -----")
+        print(f"length: {all_train.__len__()}")
+        print(f"input image shape: {all_train.__getitem__(0)}")
+        print(f"mask image shape: {all_train.__getitem__(0)}")
+        print(f"unique mask: {np.unique(all_train.__getitem__(0))}") 
 
     dataset_factory = DatasetFactory(config_data)
     dataset = dataset_factory.create_dataset()
