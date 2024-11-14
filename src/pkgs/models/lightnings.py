@@ -22,9 +22,9 @@ class ModelFactory:
         elif self.config.task == "plant2d":
             return Plant2dLightning(self.config)
         elif self.config.task == "crop":
-            return CropLightning(self.config)
+            return WholeImageLightning(self.config, task="crop")
         elif self.config.task == "all":
-            return AllLightning(self.config)
+            return WholeImageLightning(self.config, task="all")
         else:
             raise ValueError(
                 "Invalid task. Look the config file and check a task.")
@@ -102,73 +102,19 @@ class Plant2dLightning(pl.LightningModule):
         return optimizer
 
 
-class CropLightning(pl.LightningModule):
-    def __init__(self, config: ConfigData):
-        super(AllLightning, self).__init__()
+class WholeImageLightning(pl.LightningModule):
+    def __init__(self, config: ConfigData, task: str):
+        super(WholeImageLightning, self).__init__()
         self.config = config
         self._backborn = self.config.all_model.backborn
         assert self._backborn in ["resnet50", "resnet101", "mobilenet_v2"], "you should choose resnet50, resnet101 or mobilenet_v2"
         self._model_type = self.config.model_type
-
-        self.criterion = torch.nn.CrossEntropyLoss()
-        self.metric = BinaryJaccardIndex(threshold=0.5)
-
-        if self._model_type == "unet":
-            self.model = smp.Unet(
-                encoder_name=self._backborn,
-                encoder_weights="imagenet",
-                classes=2,
-            )
-        elif self._model_type == "segformer":
-            self.model = SegformerForSemanticSegmentation.from_pretrained(
-                pretrained_model_name_or_path="nvidia/segformer-b5-finetuned-cityscapes-1024-1024",
-                num_labels=2,
-                ignore_mismatched_sizes=True
-            )
+        if task == "all":
+            self.num_classes = 3
+        elif task == "crop":
+            self.num_classes = 2
         else:
-            raise ValueError("Invalid model type")
-
-    def forward(self, x):
-        return self.model(x)
-
-    def training_step(self, batch, batch_idx):
-        if self._model_type == "segformer":
-            inputs = batch["pixel_values"]
-            targets = batch["labels"]
-            outputs = self.model(pixel_values=inputs, labels=targets)
-            loss = outputs.loss
-        elif self._model_type == "unet":
-            x, y = batch
-            y_hat = self.model(x)
-            loss = self.criterion(y_hat, y)
-        return loss
-
-    def validation_step(self, batch, batch_idx):
-        if self._model_type == "segformer":
-            inputs = batch["pixel_values"]
-            targets = batch["labels"]
-            outputs = self.model(pixel_values=inputs, labels=targets)
-            loss = outputs.loss
-            self.log("val_loss", loss)
-        elif self._model_type == "unet":    
-            x, y = batch
-            y_hat = self.model(x)
-            loss = self.criterion(y_hat, y)
-            self.log("val_loss", loss)
-        return loss
-
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
-        return optimizer
-
-
-class AllLightning(pl.LightningModule):
-    def __init__(self, config: ConfigData):
-        super(AllLightning, self).__init__()
-        self.config = config
-        self._backborn = self.config.all_model.backborn
-        assert self._backborn in ["resnet50", "resnet101", "mobilenet_v2"], "you should choose resnet50, resnet101 or mobilenet_v2"
-        self._model_type = self.config.model_type
+            raise ValueError("Invalid task")
 
         self.criterion = torch.nn.CrossEntropyLoss()
         self.metric = BinaryJaccardIndex(threshold=0.5)
@@ -178,12 +124,12 @@ class AllLightning(pl.LightningModule):
             self.model = smp.Unet(
                 encoder_name=self._backborn,
                 encoder_weights="imagenet",
-                classes=3,
+                classes=self.num_classes,
             )
         elif self._model_type == "segformer":
             self.model = SegformerForSemanticSegmentation.from_pretrained(
                 pretrained_model_name_or_path=config.segformer_pretrained_model,
-                num_labels=3,
+                num_labels=self.num_classes,
                 ignore_mismatched_sizes=True
             )
         else:
