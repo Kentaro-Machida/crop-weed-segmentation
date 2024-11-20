@@ -1,91 +1,132 @@
-from pydantic import BaseModel
+import os
+from pydantic import (
+    BaseModel,
+    ValidationError,
+    field_validator
+)
+
+"""
+実験の設定を管理する責任を持つクラス
+Configファイルで指定された値が正しいかどうかの検証の責任も持つ
+"""
+
+class ModelDatasetConfig(BaseModel):
+    image_height: int
+    image_width: int
+    class_num: int
 
 
-class TrainParameterData(BaseModel):
-    max_epocks: int
-    device: str
-    batch_size: int
-    learning_rate: float
-
-
-class PlantModelData(BaseModel):
+class PatchModelDatasetConfig(ModelDatasetConfig):
     patch_size: int
-    modeltype: str
 
 
-class CropModelData(BaseModel):
-    backborn: str
+class TransformerModelDatasetConfig(ModelDatasetConfig):
+    pass
 
 
-class AllModelData(BaseModel):
-    backborn: str
+class CNNModelDatasetConfig(ModelDatasetConfig):
+    pass
 
 
-class DataAugmentation(BaseModel):
-    random_rotate: bool
-    random_flip: bool
+class TwoInputModelDatasetConfig(ModelDatasetConfig):
+    patch_size: int
+
+
+class DataValidationConfig(BaseModel):
+    vertical_flip: bool
+    horizontal_flip: bool
     random_brightness_contrast: bool
 
 
-class ConfigData(BaseModel):
-    train_parameter: TrainParameterData
-    data_root: str
-    task: str
-    model_type: str
-    resized_image_height: int
-    resized_image_width: int
-    plant_model: PlantModelData
-    crop_model: CropModelData
-    all_model: AllModelData
-    data_augmentation: DataAugmentation
-    segformer_pretrained_model: str
+class TrainConfig(BaseModel):
+    batch_size: int
+    lr: float
+    max_epochs: int
+    optimizer: str
+    scheduler: str
+    criterion: str
 
-    @classmethod
-    def load_data(cls, data: dict):
-        train_parameter = TrainParameterData(**data["train_parameter"])
-        plant_model = PlantModelData(**data["plant_model"])
-        crop_model = CropModelData(**data["crop_model"])
-        all_model = AllModelData(**data["all_model"])
-        data_augmentation = DataAugmentation(**data["data_augmentation"])
-        return cls(
-            train_parameter=train_parameter,
-            data_root=data["data_root"],
-            task=data["task"],
-            model_type=data["model_type"],
-            resized_image_height=data["resized_image_height"],
-            resized_image_width=data["resized_image_width"],
-            plant_model=plant_model,
-            crop_model=crop_model,
-            all_model=all_model,
-            data_augmentation=data_augmentation,
-            segformer_pretrained_model=data["segformer_pretrained_model"]
+    @field_validator("optimizer")
+    def check_optimizer(cls, v):
+        allowed= ["adamw"]
+        if v not in allowed:
+            raise ValueError(f"Optimizer is '{v}', it should be one of {allowed}.")
+        return v
+    
+    @field_validator("scheduler")
+    def check_scheduler(cls, v):
+        allowed = ["step"]
+        if v not in allowed:
+            raise ValueError(f"Scheduler is '{v}', it should be one of {allowed}.")
+        return v
+    
+    @field_validator("criterion")
+    def check_criterion(cls, v):
+        allowed = ["cross_entropy", "dice"]
+        if v not in allowed:
+            raise ValueError(f"Criterion is '{v}', it should be one of {allowed}.")
+        return v
+
+
+class MLflowConfig(BaseModel):
+    tracking_uri: str
+    experiment_name: str
+
+
+class ExperimentConfig(BaseModel):
+    data_root_path: str  # train, val, test folders are needed in this path
+    model_dataset_type: str  
+    num_classes: int
+
+    data_validation_config: DataValidationConfig
+    train_config: TrainConfig
+    mlflow_config: MLflowConfig
+
+    @field_validator("data_root_path")
+    def check_data_root_path(cls, v):
+        child_dirs = os.listdir(v)
+        if "train" not in child_dirs or "val" not in child_dirs or "test" not in child_dirs:
+            raise ValueError(f"data_root_path: {v} should include 'train', 'val', 'test' folders.")
+        return v
+
+    @field_validator("model_dataset_type")
+    def check_model_dataset_type(cls, v):
+        allowed = ["patch", "transformer", "cnn", "two_input"]
+        if v not in allowed:
+            raise ValueError(f"model_dataset_type is '{v}', it should be one of {allowed}.")
+        return v
+
+
+if __name__ == "__main__":
+    import yaml
+    yaml_config_path = "/home/machida/Documents/WeedSegmentation_2024/crop-weed-segmentation/config.yml"
+    with open(yaml_config_path) as f:
+        config = yaml.safe_load(f)
+    
+    try:
+        # data_validation_config test
+        data_validation_config = DataValidationConfig(**config["experiment"]["data_validation_config"])
+        print(data_validation_config)
+
+        # train_config test
+        train_config = TrainConfig(**config["experiment"]["train_config"])
+        print(train_config)
+
+        # mlflow_config test
+        mlflow_config = MLflowConfig(**config["experiment"]["mlflow_config"])
+        print(mlflow_config)
+
+        # experiment_config test
+        experiment_config = ExperimentConfig(
+            data_root_path=config["experiment"]["data_root_path"],
+            model_dataset_type=config["experiment"]["model_dataset_type"],
+            num_classes=config["experiment"]["num_classes"],
+            data_validation_config=data_validation_config,
+            train_config=train_config,
+            mlflow_config=mlflow_config
         )
-
-
-if __name__ == '__main__':
-    all_model_data = AllModelData(modeltype="segformer", backborn="mobilenet_v2")
-    print(all_model_data)
-    config = ConfigData.load_data({
-        "train_parameter": {
-            "max_epocks": 10,
-            "device": "gpu",
-            "batch_size": 8
-        },
-        "data_root": "path/to/data",
-        "task": "all",
-        "resized_image_height": 512,
-        "resized_image_width": 512,
-        "plant_model": {
-            "patch_size": 32,
-            "modeltype": "cnn"
-        },
-        "crop_model": {
-            "modeltype": "segformer",
-            "backborn": "mobilenet_v2"
-        },
-        "all_model": {
-            "modeltype": "segformer",
-            "backborn": "mobilenet_v2"
-        }
-    })
-    print(config)
+        print(experiment_config)
+        print("Complete.")
+    except ValidationError as e:
+        print(e)
+    
