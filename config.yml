@@ -1,0 +1,39 @@
+# Common settings
+experiment:
+  data_root_path: /home/machida/Documents/WeedSegmentation_2024/crop-weed-segmentation/src/pkgs/datasets/test_dataset
+  model_dataset_type: transformer  # transformer | cnn | patch | two
+  num_classes: 2  # 2 | 3
+
+  train_config:
+    batch_size: 4
+    lr: 0.0001
+    max_epochs: 50
+    optimizer: adamw  # adamw 
+    scheduler: step  # step | plateau
+    criterion: cross_entropy  # cross_entropy | dice
+
+  data_validation_config:
+    vertical_flip: True
+    horizontal_flip: True
+    random_brightness_contrast: True
+
+  mlflow_config:
+    tracking_uri: /path/to/mlflow
+    experiment_name: experiment_name
+
+# Model and dataset specific settings
+# If model_dataset_type is model_dataset_type = patch, you need to set patch_setting
+patch_setting:
+  patch_size: 4
+
+# If model_dataset_type is model_dataset_type = two, you need to set two_setting
+two_setting:
+  two_size: 4
+
+# If model_dataset_type is model_dataset_type = transformer, you need to set transformer_setting
+transformer_setting:
+  test: test
+
+# If model_dataset_type is model_dataset_type = cnn, you need to set cnn_setting
+cnn_setting:
+  test: test
