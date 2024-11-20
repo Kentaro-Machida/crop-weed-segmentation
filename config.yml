@@ -2,7 +2,6 @@
 experiment:
   data_root_path: /home/machida/Documents/WeedSegmentation_2024/crop-weed-segmentation/src/pkgs/datasets/test_dataset
   model_dataset_type: transformer  # transformer | cnn | patch | two
-  num_classes: 2  # 2 | 3
 
   train_config:
     batch_size: 4
@@ -20,6 +19,12 @@ experiment:
   mlflow_config:
     tracking_uri: /path/to/mlflow
     experiment_name: experiment_name
+
+  model_dataset_config:
+    image_height: 224
+    image_width: 224
+    num_classes: 2  # 2 | 3
+
 
 # Model and dataset specific settings
 # If model_dataset_type is model_dataset_type = patch, you need to set patch_setting

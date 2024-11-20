@@ -13,7 +13,7 @@ Configファイルで指定された値が正しいかどうかの検証の責�
 class ModelDatasetConfig(BaseModel):
     image_height: int
     image_width: int
-    class_num: int
+    num_classes: int
 
 
 class PatchModelDatasetConfig(ModelDatasetConfig):
@@ -76,7 +76,6 @@ class MLflowConfig(BaseModel):
 class ExperimentConfig(BaseModel):
     data_root_path: str  # train, val, test folders are needed in this path
     model_dataset_type: str  
-    num_classes: int
 
     data_validation_config: DataValidationConfig
     train_config: TrainConfig
