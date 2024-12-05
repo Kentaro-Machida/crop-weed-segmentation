@@ -3,6 +3,14 @@ from collections import OrderedDict
 
 
 class PatchFCN(nn.Module):
+    """1次元のパッチを入力として受け取り、全結合層を通して1次元のパッチを出力するモデル
+    入力パッチのサイズはpatch_heigth * patch_width * 3であることを前提としている
+
+    Args:
+        patch_height (int): パッチの高さ
+        patch_width (int): パッチの幅
+        number_of_layers (int): 全結合層の数
+    """
     def __init__(self, patch_heigth:int, patch_width:int, number_of_layers:int):
         assert number_of_layers%2 == 0, "number_of_layers have to be even number"
         self._input_dim = patch_heigth * patch_width * 3

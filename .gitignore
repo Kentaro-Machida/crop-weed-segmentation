@@ -163,3 +163,6 @@ cython_debug/
 
 # Pytorch Lightning logs
 *lightning_logs*
+
+# config file
+*.config.yml*
