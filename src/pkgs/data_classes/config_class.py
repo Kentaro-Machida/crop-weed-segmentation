@@ -106,10 +106,7 @@ if __name__ == "__main__":
         config = yaml.safe_load(f)
     
     try:
-        # data_validation_config test
-        data_validation_config = DataValidationConfig(**config["experiment"]["data_validation_config"])
-        print(data_validation_config)
-
+       
         # train_config test
         train_config = TrainConfig(**config["experiment"]["train_config"])
         print(train_config)
@@ -123,7 +120,6 @@ if __name__ == "__main__":
             data_root_path=config["experiment"]["data_root_path"],
             model_dataset_type=config["experiment"]["model_dataset_type"],
             num_classes=config["experiment"]["num_classes"],
-            data_validation_config=data_validation_config,
             train_config=train_config,
             mlflow_config=mlflow_config
         )
