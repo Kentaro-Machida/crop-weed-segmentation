@@ -10,10 +10,17 @@ from pydantic import (
 Configファイルで指定された値が正しいかどうかの検証の責任も持つ
 """
 
+class DataAugmentationConfig(BaseModel):
+    vertical_flip: bool
+    horizontal_flip: bool
+    random_brightness_contrast: bool
+
+
 class ModelDatasetConfig(BaseModel):
     image_height: int
     image_width: int
     num_classes: int
+    data_augmentation_config: DataAugmentationConfig
 
 
 class PatchModelDatasetConfig(ModelDatasetConfig):
@@ -21,7 +28,7 @@ class PatchModelDatasetConfig(ModelDatasetConfig):
 
 
 class TransformerModelDatasetConfig(ModelDatasetConfig):
-    pass
+    pretrained_model: str
 
 
 class CNNModelDatasetConfig(ModelDatasetConfig):
@@ -32,10 +39,7 @@ class TwoInputModelDatasetConfig(ModelDatasetConfig):
     patch_size: int
 
 
-class DataValidationConfig(BaseModel):
-    vertical_flip: bool
-    horizontal_flip: bool
-    random_brightness_contrast: bool
+
 
 
 class TrainConfig(BaseModel):
@@ -77,7 +81,6 @@ class ExperimentConfig(BaseModel):
     data_root_path: str  # train, val, test folders are needed in this path
     model_dataset_type: str  
 
-    data_validation_config: DataValidationConfig
     train_config: TrainConfig
     mlflow_config: MLflowConfig
 

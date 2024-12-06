@@ -11,11 +11,6 @@ experiment:
     scheduler: step  # step | plateau
     criterion: cross_entropy  # cross_entropy | dice
 
-  data_validation_config:
-    vertical_flip: True
-    horizontal_flip: True
-    random_brightness_contrast: True
-
   mlflow_config:
     tracking_uri: /path/to/mlflow
     experiment_name: experiment_name
@@ -24,6 +19,10 @@ experiment:
     image_height: 224
     image_width: 224
     num_classes: 2  # 2 | 3
+    data_augmentation_config:
+      vertical_flip: True
+      horizontal_flip: True
+      random_brightness_contrast: True
 
 
 # Model and dataset specific settings
@@ -37,7 +36,7 @@ two_setting:
 
 # If model_dataset_type is model_dataset_type = transformer, you need to set transformer_setting
 transformer_setting:
-  test: test
+  pretrained_model: nvidia/segformer-b5-finetuned-cityscapes-1024-1024
 
 # If model_dataset_type is model_dataset_type = cnn, you need to set cnn_setting
 cnn_setting:
