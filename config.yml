@@ -24,20 +24,19 @@ experiment:
       horizontal_flip: True
       random_brightness_contrast: True
 
+    # Model and dataset specific settings
+    # If model_dataset_type is model_dataset_type = patch, you need to set patch_setting
+    patch_setting:
+      patch_size: 4
 
-# Model and dataset specific settings
-# If model_dataset_type is model_dataset_type = patch, you need to set patch_setting
-patch_setting:
-  patch_size: 4
+    # If model_dataset_type is model_dataset_type = two, you need to set two_setting
+    two_setting:
+      two_size: 4
 
-# If model_dataset_type is model_dataset_type = two, you need to set two_setting
-two_setting:
-  two_size: 4
+    # If model_dataset_type is model_dataset_type = transformer, you need to set transformer_setting
+    transformer_setting:
+      pretrained_model: nvidia/segformer-b5-finetuned-cityscapes-1024-1024
 
-# If model_dataset_type is model_dataset_type = transformer, you need to set transformer_setting
-transformer_setting:
-  pretrained_model: nvidia/segformer-b5-finetuned-cityscapes-1024-1024
-
-# If model_dataset_type is model_dataset_type = cnn, you need to set cnn_setting
-cnn_setting:
-  test: test
+    # If model_dataset_type is model_dataset_type = cnn, you need to set cnn_setting
+    cnn_setting:
+      test: test

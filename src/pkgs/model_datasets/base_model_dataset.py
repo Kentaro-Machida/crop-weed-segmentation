@@ -1,20 +1,29 @@
 from abc import ABC, abstractmethod
 from src.pkgs.data_classes.config_class import ModelDatasetConfig
+from src.pkgs.preproceses.data_augmentation import DataTransformBuilder
 
 
 class BaseModelDataset(ABC):
     """
-    Base class for dataset.
+    Base class for model and dataset.
+    このクラスの子クラスは、モデルと対応するデータセットを返す責任を追う
     """
     def __init__(self, config: ModelDatasetConfig):
         self.image_height = config.image_height
         self.image_width = config.image_width
         self.class_num = config.num_classes
+        self.transform = DataTransformBuilder(config.data_augmentation_config)
 
     @abstractmethod
-    def get_model_dataset(self)->dict:
+    def get_model_datasets(self)->dict:
         """
         Return model and dataset pair.
+        {
+            "model": model,
+            "train_dataset": train_dataset_name,
+            "val_dataset": val_dataset_name,
+            "test_dataset": test_dataset_name
+        }
         """
         pass
 
@@ -23,10 +32,16 @@ class TestModelDataset(BaseModelDataset):
     """
     Test dataset for model.
     """
-    def get_model_dataset(self)->dict:
+    def __init__(self, config: ModelDatasetConfig):
+        super().__init__(config)
+
+    
+    def get_model_datasets(self)->dict:
         return {
             "model": "test_model",
-            "dataset": "test_dataset"
+            "train_dataset": "train_dataset",
+            "val_dataset": "val_dataset",
+            "test_dataset": "test_dataset"
         }
 
 if __name__ == "__main__":
@@ -37,5 +52,5 @@ if __name__ == "__main__":
     
     model_dataset_config = ModelDatasetConfig(**config["experiment"]["model_dataset_config"])
     test_model_dataset = TestModelDataset(model_dataset_config)
-    print(test_model_dataset.get_model_dataset())
+    print(test_model_dataset.get_model_datasets())
 

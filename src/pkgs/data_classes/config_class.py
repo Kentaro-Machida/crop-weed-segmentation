@@ -10,6 +10,22 @@ from pydantic import (
 Configファイルで指定された値が正しいかどうかの検証の責任も持つ
 """
 
+class PatchSetting(BaseModel):
+    patch_size: int
+
+
+class TransformerSetting(BaseModel):
+    pretrained_model: str
+
+
+class CNNSetting(BaseModel):
+    pass
+
+
+class TwoSetting(BaseModel):
+    two_size: int
+
+
 class DataAugmentationConfig(BaseModel):
     vertical_flip: bool
     horizontal_flip: bool
@@ -21,25 +37,11 @@ class ModelDatasetConfig(BaseModel):
     image_width: int
     num_classes: int
     data_augmentation_config: DataAugmentationConfig
-
-
-class PatchModelDatasetConfig(ModelDatasetConfig):
-    patch_size: int
-
-
-class TransformerModelDatasetConfig(ModelDatasetConfig):
-    pretrained_model: str
-
-
-class CNNModelDatasetConfig(ModelDatasetConfig):
-    pass
-
-
-class TwoInputModelDatasetConfig(ModelDatasetConfig):
-    patch_size: int
-
-
-
+    # Depending on the model_dataset_type, the following classes are used
+    patch_setting: PatchSetting = None
+    transformer_setting: TransformerSetting = None
+    cnn_setting: CNNSetting = None
+    two_setting: TwoSetting = None
 
 
 class TrainConfig(BaseModel):
