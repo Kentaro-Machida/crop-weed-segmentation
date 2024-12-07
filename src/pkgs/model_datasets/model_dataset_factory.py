@@ -20,7 +20,8 @@ class ModelDatasetFactory:
     
     def create(self):
         if self.model_dataset_type == "transformer":
-            return TransformerModelDataset(self.config, self.data_root_path)
+            modeldataset = TransformerModelDataset(self.config, self.data_root_path)
+            return modeldataset.get_model_datasets()
         
 
 if __name__ == "__main__":
@@ -29,10 +30,9 @@ if __name__ == "__main__":
     with open(yaml_config_path) as f:
         config = yaml.safe_load(f)
     
-    model_dataset_config = ModelDatasetConfig(**config["experiment"]["model_dataset_config"])
+    modeldataset_config = ModelDatasetConfig(**config["experiment"]["modeldataset_config"])
     model_dataset_type = config["experiment"]["model_dataset_type"]
     data_root_path = config["experiment"]["data_root_path"]
-    model_dataset_factory = ModelDatasetFactory(model_dataset_config, data_root_path, model_dataset_type)
+    model_dataset_factory = ModelDatasetFactory(modeldataset_config, data_root_path, model_dataset_type)
     model_dataset = model_dataset_factory.create()
-
-    print(model_dataset.get_model_datasets())
+    print(model_dataset)

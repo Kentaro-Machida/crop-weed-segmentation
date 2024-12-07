@@ -36,21 +36,60 @@ class ModelDatasetConfig(BaseModel):
     image_height: int
     image_width: int
     num_classes: int
+    lr: float
+    criterion: str
+    metric: str
+    batch_size: int
     data_augmentation_config: DataAugmentationConfig
+
     # Depending on the model_dataset_type, the following classes are used
     patch_setting: PatchSetting = None
     transformer_setting: TransformerSetting = None
     cnn_setting: CNNSetting = None
     two_setting: TwoSetting = None
 
+    @field_validator("criterion")
+    def check_criterion(cls, v):
+        allowed = ["cross_entropy", "dice"]
+        if v not in allowed:
+            raise ValueError(f"Criterion is '{v}', it should be one of {allowed}.")
+        return v
+    
+    @field_validator("metric")
+    def check_metric(cls, v):
+        allowed = ["binary_jaccard"]
+        if v not in allowed:
+            raise ValueError(f"Metric is '{v}', it should be one of {allowed}.")
+        return v
+
+    def from_dict(config:dict):
+        data_augmentation_config = DataAugmentationConfig(**config["data_augmentation_config"])
+        transformer_setting = TransformerSetting(**config["transformer_setting"])
+        patch_setting = PatchSetting(**config["patch_setting"])
+        cnn_setting = CNNSetting(**config["cnn_setting"])
+        two_setting = TwoSetting(**config["two_setting"])
+
+        return ModelDatasetConfig(
+            image_height = config["image_height"],
+            image_width = config["image_width"],
+            num_classes = config["num_classes"],
+            lr = config["lr"],
+            criterion = config["criterion"],
+            metric = config["metric"],
+            batch_size = config["batch_size"],
+            data_augmentation_config=data_augmentation_config,
+            transformer_setting=transformer_setting,
+            patch_setting=patch_setting,
+            cnn_setting=cnn_setting,
+            two_setting=two_setting
+        )
+
+
 
 class TrainConfig(BaseModel):
-    batch_size: int
-    lr: float
     max_epochs: int
     optimizer: str
     scheduler: str
-    criterion: str
 
     @field_validator("optimizer")
     def check_optimizer(cls, v):
@@ -65,13 +104,6 @@ class TrainConfig(BaseModel):
         if v not in allowed:
             raise ValueError(f"Scheduler is '{v}', it should be one of {allowed}.")
         return v
-    
-    @field_validator("criterion")
-    def check_criterion(cls, v):
-        allowed = ["cross_entropy", "dice"]
-        if v not in allowed:
-            raise ValueError(f"Criterion is '{v}', it should be one of {allowed}.")
-        return v
 
 
 class MLflowConfig(BaseModel):
@@ -81,10 +113,11 @@ class MLflowConfig(BaseModel):
 
 class ExperimentConfig(BaseModel):
     data_root_path: str  # train, val, test folders are needed in this path
-    model_dataset_type: str  
+    modeldataset_type: str  
 
     train_config: TrainConfig
     mlflow_config: MLflowConfig
+    modeldataset_config: ModelDatasetConfig
 
     @field_validator("data_root_path")
     def check_data_root_path(cls, v):
@@ -93,12 +126,28 @@ class ExperimentConfig(BaseModel):
             raise ValueError(f"data_root_path: {v} should include 'train', 'val', 'test' folders.")
         return v
 
-    @field_validator("model_dataset_type")
+    @field_validator("modeldataset_type")
     def check_model_dataset_type(cls, v):
         allowed = ["patch", "transformer", "cnn", "two_input"]
         if v not in allowed:
             raise ValueError(f"model_dataset_type is '{v}', it should be one of {allowed}.")
         return v
+    
+    def from_dict(config_dict:dict):
+        data_root_path = config_dict["data_root_path"]
+        modeldataset_type = config_dict["modeldataset_type"]
+
+        train_config = TrainConfig(**config_dict["train_config"])
+        mlflow_config = MLflowConfig(**config_dict["mlflow_config"])
+        modeldataset_config = ModelDatasetConfig(**config_dict["modeldataset_config"])
+
+        return ExperimentConfig(
+            data_root_path=data_root_path,
+            modeldataset_type=modeldataset_type,
+            train_config=train_config,
+            mlflow_config=mlflow_config,
+            modeldataset_config=modeldataset_config
+        )
 
 
 if __name__ == "__main__":
@@ -108,25 +157,21 @@ if __name__ == "__main__":
         config = yaml.safe_load(f)
     
     try:
-       
         # train_config test
         train_config = TrainConfig(**config["experiment"]["train_config"])
-        print(train_config)
+        print("train_config test is complete.")
 
         # mlflow_config test
         mlflow_config = MLflowConfig(**config["experiment"]["mlflow_config"])
-        print(mlflow_config)
+        print("mlflow_config test is complete.")
+
+        # modeldataset_config test
+        modeldataset_config = ModelDatasetConfig.from_dict(config["experiment"]["modeldataset_config"])
+        print("modeldataset_config test is complete.")
 
         # experiment_config test
-        experiment_config = ExperimentConfig(
-            data_root_path=config["experiment"]["data_root_path"],
-            model_dataset_type=config["experiment"]["model_dataset_type"],
-            num_classes=config["experiment"]["num_classes"],
-            train_config=train_config,
-            mlflow_config=mlflow_config
-        )
-        print(experiment_config)
-        print("Complete.")
+        experiment_config = ExperimentConfig.from_dict(config["experiment"])
+        print("experiment_config test is complete.")
     except ValidationError as e:
         print(e)
     

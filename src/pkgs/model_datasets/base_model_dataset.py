@@ -39,9 +39,9 @@ class TestModelDataset(BaseModelDataset):
     def get_model_datasets(self)->dict:
         return {
             "model": "test_model",
-            "train_dataset": "train_dataset",
-            "val_dataset": "val_dataset",
-            "test_dataset": "test_dataset"
+            "train_loader": "train_loader",
+            "val_loader": "val_loader",
+            "test_loader": "test_loader"
         }
 
 if __name__ == "__main__":
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     with open(yaml_config_path) as f:
         config = yaml.safe_load(f)
     
-    model_dataset_config = ModelDatasetConfig(**config["experiment"]["model_dataset_config"])
-    test_model_dataset = TestModelDataset(model_dataset_config)
+    modeldataset_config = ModelDatasetConfig(**config["experiment"]["modeldataset_config"])
+    test_model_dataset = TestModelDataset(modeldataset_config)
     print(test_model_dataset.get_model_datasets())
 

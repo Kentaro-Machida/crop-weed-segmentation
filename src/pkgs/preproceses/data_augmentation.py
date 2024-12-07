@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     with open(config_path) as f:
         config = yaml.safe_load(f)
-    config_data = DataAugmentationConfig(**config["experiment"]["model_dataset_config"]["data_augmentation_config"])
+    config_data = DataAugmentationConfig(**config["experiment"]["modeldataset_config"]["data_augmentation_config"])
     transformer = DataTransformBuilder(config_data)
     
     test_np = np.random.randint(0, 256, (256, 256, 3), dtype=np.uint8)

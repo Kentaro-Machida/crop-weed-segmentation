@@ -1,8 +1,11 @@
 import os 
 import torch
 import numpy as np
+import pytorch_lightning as pl
+from torch.utils.data import DataLoader, Dataset
+from torchmetrics.classification import BinaryJaccardIndex
 
-from src.utils.data_loads import get_image_path, load_image
+from src.utils.data_loads import get_image_path, load_image, load_mask
 from src.pkgs.preproceses.data_augmentation import DataTransformBuilder
 from ..data_classes.config_class import ModelDatasetConfig
 from .base_model_dataset import BaseModelDataset
@@ -16,6 +19,7 @@ class TransformerModelDataset(BaseModelDataset):
     def __init__(self, config: ModelDatasetConfig, data_root_path: str):
         super().__init__(config)
 
+        self.model = TransformerLightning(config)
         self._pretrained_model = config.transformer_setting.pretrained_model
         self._preprocessor = SegformerImageProcessor.from_pretrained(
             self._pretrained_model
@@ -24,6 +28,8 @@ class TransformerModelDataset(BaseModelDataset):
 
         self.image_height = config.image_height
         self.image_width = config.image_width
+
+        self.batch_size = config.batch_size
 
         train_img_dir = os.path.join(data_root_path, "train", "images")
         train_mask_dir = os.path.join(data_root_path, "test", "masks")
@@ -42,9 +48,6 @@ class TransformerModelDataset(BaseModelDataset):
 
 
     def get_model_datasets(self)->dict:
-        model = SegformerForSemanticSegmentation.from_pretrained(
-            self._pretrained_model
-        )
 
         train_dataset = SegformerDataset(
             self._train_img_paths,
@@ -74,14 +77,14 @@ class TransformerModelDataset(BaseModelDataset):
         )
         
         return {
-            "model": model,
-            "train_dataset": train_dataset,
-            "val_dataset": val_dataset,
-            "test_dataset": test_dataset
+            "model": self.model,
+            "train_loader": DataLoader(train_dataset, self.batch_size),
+            "val_loader": DataLoader(val_dataset, self.batch_size),
+            "test_loader": DataLoader(test_dataset, self.batch_size)
         }
     
 
-class SegformerDataset:
+class SegformerDataset(Dataset):
     def __init__(
             self,
             img_path_list:list,
@@ -105,13 +108,12 @@ class SegformerDataset:
         img = load_image(
             self.img_path_list[idx],
             self.img_height,
-            self.img_width,
-            task="all")
-        mask = load_image(
+            self.img_width
+            )
+        mask = load_mask(
             self.mask_path_list[idx],
             self.img_height,
             self.img_width,
-            is_mask=True,
             task="all")
         augmentated = self._data_augmentator(
             image=img, mask=mask
@@ -128,3 +130,62 @@ class SegformerDataset:
         SegFormer_input['labels'] = mask_tensor
 
         return SegFormer_input
+
+
+class TransformerLightning(pl.LightningModule):
+    def __init__(self, config: ModelDatasetConfig):
+        super(TransformerLightning, self).__init__()
+        self.config = config
+        self.num_classes = config.num_classes
+
+        if config.criterion == "cross_entropy":
+            self.criterion = torch.nn.CrossEntropyLoss()
+
+        if config.metric == "binary_jaccard":
+            self.metric = BinaryJaccardIndex(threshold=0.5)
+
+        self.lr = config.lr
+
+        self.model = SegformerForSemanticSegmentation.from_pretrained(
+            pretrained_model_name_or_path=config.transformer_setting.pretrained_model,
+            num_labels=self.num_classes,
+            ignore_mismatched_sizes=True
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
+    def training_step(self, batch, batch_idx):
+        inputs = batch["pixel_values"]
+        targets = batch["labels"]
+        outputs = self.model(pixel_values=inputs, labels=targets)
+        loss = outputs.loss
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        inputs = batch["pixel_values"]
+        targets = batch["labels"]
+        outputs = self.model(pixel_values=inputs, labels=targets)
+        loss = outputs.loss
+        self.log("val_loss", loss)
+        return loss
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+        return optimizer
+
+
+if __name__ == "__main__":
+    import yaml
+    yaml_config_path = "/home/machida/Documents/WeedSegmentation_2024/crop-weed-segmentation/config.yml"
+    with open(yaml_config_path) as f:
+        config = yaml.safe_load(f)
+    
+    data_root_path = config["experiment"]["data_root_path"]
+    modeldataset_config = ModelDatasetConfig(**config["experiment"]["modeldataset_config"])
+    transformer_model_dataset = TransformerModelDataset(modeldataset_config, data_root_path)
+    model_datasets = transformer_model_dataset.get_model_datasets()
+    model = model_datasets["model"]
+    train_loader = model_datasets["train_loader"]
+    val_loader = model_datasets["val_loader"]
+    test_loader = model_datasets["test_loader"]
