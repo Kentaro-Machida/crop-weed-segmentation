@@ -1,6 +1,6 @@
 # Common settings
 experiment:
-  data_root_path: /home/machida/Documents/WeedSegmentation_2024/crop-weed-segmentation/src/pkgs/datasets/test_dataset
+  data_root_path: ./src/pkgs/datasets/test_dataset
   modeldataset_type: transformer  # transformer | cnn | patch | two
 
   train_config:
