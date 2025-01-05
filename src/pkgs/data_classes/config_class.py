@@ -24,7 +24,8 @@ class TransformerSetting(BaseModel):
 
 
 class CNNSetting(BaseModel):
-    pass
+    backborn: str
+    task: str
 
 
 class TwoSetting(BaseModel):

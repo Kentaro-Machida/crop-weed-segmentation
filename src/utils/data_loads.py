@@ -49,7 +49,7 @@ def load_mask(
     """
     mask = cv2.imread(path)
     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
-    if task == "plant1d" or task == "plant2d":
+    if task == "plant1d" or task == "plant2d" or task == "plant":
         mask = mask[:,:,0] != 0
         mask = mask[:,:,np.newaxis]
     elif task == "all":
