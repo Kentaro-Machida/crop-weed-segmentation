@@ -1,5 +1,6 @@
 from src.pkgs.data_classes.config_class import ModelDatasetConfig
 from src.pkgs.model_datasets.transformer import TransformerModelDataset
+from src.pkgs.model_datasets.patches import Patch2dModelDataset
 
 class ModelDatasetFactory:
     """
@@ -21,6 +22,9 @@ class ModelDatasetFactory:
     def create(self):
         if self.model_dataset_type == "transformer":
             modeldataset = TransformerModelDataset(self.config, self.data_root_path)
+            return modeldataset.get_model_datasets()
+        elif self.model_dataset_type == "patch2d":
+            modeldataset = Patch2dModelDataset(self.config, self.data_root_path)
             return modeldataset.get_model_datasets()
         
 

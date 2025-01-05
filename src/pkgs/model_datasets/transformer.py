@@ -24,6 +24,7 @@ class TransformerModelDataset(BaseModelDataset):
         self._preprocessor = SegformerImageProcessor.from_pretrained(
             self._pretrained_model
         )
+        # 以下はModelDataset系統クラスにおいて共通の処理
         self._data_augmentator = DataTransformBuilder(config.data_augmentation_config)
 
         self.image_height = config.image_height

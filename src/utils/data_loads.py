@@ -25,7 +25,7 @@ def load_image(
         reseized_width: int
         )-> np.ndarray:
     """
-    Load image from path and resize it.
+    Load RGB image from path and resize it.
     Return image as 3d np.ndarray.
     """
     img = cv2.imread(path)
@@ -50,13 +50,13 @@ def load_mask(
     mask = cv2.imread(path)
     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
     if task == "plant1d" or task == "plant2d":
-        mask = mask[:,:,0] != config["label"]["background"]
+        mask = mask[:,:,0] != 0
         mask = mask[:,:,np.newaxis]
     elif task == "all":
         mask = mask[:,:,0]
         mask = mask[:,:,np.newaxis]
     elif task == "crop":
-        mask = mask[:,:,0] == config["label"]["crop"]
+        mask = mask[:,:,0] == 1
         mask = mask[:,:,np.newaxis]
     else:
         raise ValueError(f"task: {task} is not supported")

@@ -166,3 +166,5 @@ cython_debug/
 
 # config file
 *.config.yml*
+
+/src/pkgs/datasets/test_dataset/_cache/

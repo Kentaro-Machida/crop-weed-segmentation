@@ -10,8 +10,13 @@ from pydantic import (
 Configファイルで指定された値が正しいかどうかの検証の責任も持つ
 """
 
-class PatchSetting(BaseModel):
+class Patch1dSetting(BaseModel):
     patch_size: int
+
+
+class Patch2dSetting(BaseModel):
+    patch_size: int
+    backborn: str
 
 
 class TransformerSetting(BaseModel):
@@ -43,7 +48,8 @@ class ModelDatasetConfig(BaseModel):
     data_augmentation_config: DataAugmentationConfig
 
     # Depending on the model_dataset_type, the following classes are used
-    patch_setting: PatchSetting = None
+    patch1d_setting: Patch1dSetting = None
+    patch2d_setting: Patch2dSetting = None
     transformer_setting: TransformerSetting = None
     cnn_setting: CNNSetting = None
     two_setting: TwoSetting = None
@@ -65,7 +71,8 @@ class ModelDatasetConfig(BaseModel):
     def from_dict(config:dict):
         data_augmentation_config = DataAugmentationConfig(**config["data_augmentation_config"])
         transformer_setting = TransformerSetting(**config["transformer_setting"])
-        patch_setting = PatchSetting(**config["patch_setting"])
+        patch1d_setting = Patch1dSetting(**config["patch1d_setting"])
+        patch2d_setting = Patch2dSetting(**config["patch2d_setting"])
         cnn_setting = CNNSetting(**config["cnn_setting"])
         two_setting = TwoSetting(**config["two_setting"])
 
@@ -79,7 +86,8 @@ class ModelDatasetConfig(BaseModel):
             batch_size = config["batch_size"],
             data_augmentation_config=data_augmentation_config,
             transformer_setting=transformer_setting,
-            patch_setting=patch_setting,
+            patch1d_setting=patch1d_setting,
+            patch2d_setting=patch2d_setting,
             cnn_setting=cnn_setting,
             two_setting=two_setting
         )
@@ -128,7 +136,7 @@ class ExperimentConfig(BaseModel):
 
     @field_validator("modeldataset_type")
     def check_model_dataset_type(cls, v):
-        allowed = ["patch", "transformer", "cnn", "two_input"]
+        allowed = ["patch1d", "patch2d", "transformer", "cnn", "two_input"]
         if v not in allowed:
             raise ValueError(f"model_dataset_type is '{v}', it should be one of {allowed}.")
         return v
