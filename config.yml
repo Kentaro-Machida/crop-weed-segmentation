@@ -9,7 +9,7 @@ experiment:
     scheduler: step  # step | plateau
 
   mlflow_config:
-    tracking_uri: /path/to/mlflow
+    tracking_uri: "file:./mlruns"
     experiment_name: experiment_name
 
   modeldataset_config:

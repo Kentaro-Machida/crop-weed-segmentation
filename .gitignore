@@ -168,3 +168,6 @@ cython_debug/
 *.config.yml*
 
 /src/pkgs/datasets/test_dataset/_cache/
+
+# MLflow logs
+mlruns/
