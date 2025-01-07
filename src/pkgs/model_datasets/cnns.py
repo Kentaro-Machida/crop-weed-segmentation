@@ -70,6 +70,7 @@ class CNNModelDataset(BaseModelDataset):
 class UNetppLightning(LightningModule):
     def __init__(self, config: ModelDatasetConfig):
         super(UNetppLightning, self).__init__()
+        # iouの使い方 Pred: (N, C, H, W), Target: (N, H, W)
         self.iou = BinaryJaccardIndex()
         
         self.model = smp.UnetPlusPlus(
@@ -111,6 +112,16 @@ class UNetppLightning(LightningModule):
         y_hat_class = (torch.sigmoid(y_hat) > 0.5).float()  # Sigmoid activation function is added here
         iou_score = self.iou(y_hat_class, y)
         self.log('val_IoU', iou_score, on_epoch=True)
+
+    def test_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self(x)
+        loss = self.criterion(y_hat, y)
+        self.log('test_loss', loss, on_epoch=True)
+
+        y_hat_class = (torch.sigmoid(y_hat) > 0.5).float()
+        iou_score = self.iou(y_hat_class, y)
+        self.log('test_IoU', iou_score, on_epoch=True)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=0.001, weight_decay=1e-5)  # weight decay added

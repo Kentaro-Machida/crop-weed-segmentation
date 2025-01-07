@@ -2,7 +2,7 @@ import mlflow
 from mlflow import MlflowClient
 from lightning.pytorch import Trainer
 import yaml
-from lightning.pytorch.callbacks import EarlyStopping
+from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 
 from src.pkgs.data_classes.config_class import ExperimentConfig, TrainConfig, MLflowConfig
 from src.pkgs.model_datasets.model_dataset_factory import ModelDatasetFactory
@@ -32,6 +32,7 @@ def main():
     model = model_dataset_dict["model"]
     train_loader = model_dataset_dict["train_loader"]
     val_loader = model_dataset_dict["val_loader"]
+    test_loader = model_dataset_dict["test_loader"]
 
     early_stopping_callback = EarlyStopping(
         monitor="val_loss",
@@ -39,11 +40,19 @@ def main():
         mode="min"
     )
 
+    model_checkpoint_callback = ModelCheckpoint(
+        monitor="val_loss",
+        dirpath="./best_model",
+        filename="best_model",
+        save_top_k=1,
+        mode="min"
+    )
+
     trainer = Trainer(
         max_epochs=train_config.max_epochs,
         accelerator='cpu',
         devices=1,
-        callbacks=[early_stopping_callback],
+        callbacks=[early_stopping_callback, model_checkpoint_callback],
         log_every_n_steps=10
     )
 
@@ -53,6 +62,9 @@ def main():
     with mlflow.start_run() as run:
         trainer.fit(model, train_loader, val_loader)
         mlflow.log_artifact(local_path="./config.yml")
+
+        best_model_path = model_checkpoint_callback.best_model_path
+        trainer.test(dataloaders=test_loader, ckpt_path=best_model_path)
     
     print_auto_logged_info(mlflow.get_run(run_id=run.info.run_id))
 

@@ -171,6 +171,14 @@ class TransformerLightning(LightningModule):
         loss = outputs.loss
         self.log("val_loss", loss)
         return loss
+    
+    def test_step(self, batch, batch_idx):
+        inputs = batch["pixel_values"]
+        targets = batch["labels"]
+        outputs = self.model(pixel_values=inputs, labels=targets)
+        loss = outputs.loss
+        self.log("test_loss", loss)
+        return loss
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
