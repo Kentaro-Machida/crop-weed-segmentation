@@ -22,10 +22,12 @@ def main():
 
     experiment_config = ExperimentConfig.from_dict(config["experiment"])
     train_config = TrainConfig(**config["experiment"]["train_config"])
+    
     model_dataset_factory = ModelDatasetFactory(
         experiment_config.modeldataset_config,
         experiment_config.data_root_path,
-        experiment_config.modeldataset_type
+        experiment_config.modeldataset_type,
+        task=config["experiment"]["task"]
         )
     model_dataset_dict = model_dataset_factory.create()
     

@@ -11,7 +11,6 @@ class BaseModelDataset(ABC):
     def __init__(self, config: ModelDatasetConfig):
         self.image_height = config.image_height
         self.image_width = config.image_width
-        self.class_num = config.num_classes
         self.transform = DataTransformBuilder(config.data_augmentation_config)
 
     @abstractmethod

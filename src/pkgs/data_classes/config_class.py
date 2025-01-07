@@ -25,7 +25,6 @@ class TransformerSetting(BaseModel):
 
 class CNNSetting(BaseModel):
     backborn: str
-    task: str
 
 
 class TwoSetting(BaseModel):
@@ -41,7 +40,6 @@ class DataAugmentationConfig(BaseModel):
 class ModelDatasetConfig(BaseModel):
     image_height: int
     image_width: int
-    num_classes: int
     lr: float
     criterion: str
     metric: str
@@ -80,7 +78,6 @@ class ModelDatasetConfig(BaseModel):
         return ModelDatasetConfig(
             image_height = config["image_height"],
             image_width = config["image_width"],
-            num_classes = config["num_classes"],
             lr = config["lr"],
             criterion = config["criterion"],
             metric = config["metric"],
@@ -123,6 +120,7 @@ class MLflowConfig(BaseModel):
 class ExperimentConfig(BaseModel):
     data_root_path: str  # train, val, test folders are needed in this path
     modeldataset_type: str  
+    task: str
 
     train_config: TrainConfig
     mlflow_config: MLflowConfig
@@ -133,6 +131,13 @@ class ExperimentConfig(BaseModel):
         child_dirs = os.listdir(v)
         if "train" not in child_dirs or "val" not in child_dirs or "test" not in child_dirs:
             raise ValueError(f"data_root_path: {v} should include 'train', 'val', 'test' folders.")
+        return v
+    
+    @field_validator("task")
+    def check_task(cls, v):
+        allowed = ["all", "plant", "crop"]
+        if v not in allowed:
+            raise ValueError(f"task is '{v}', it should be one of {allowed}.")
         return v
 
     @field_validator("modeldataset_type")
@@ -145,6 +150,7 @@ class ExperimentConfig(BaseModel):
     def from_dict(config_dict:dict):
         data_root_path = config_dict["data_root_path"]
         modeldataset_type = config_dict["modeldataset_type"]
+        task = config_dict["task"]
 
         train_config = TrainConfig(**config_dict["train_config"])
         mlflow_config = MLflowConfig(**config_dict["mlflow_config"])
@@ -153,6 +159,7 @@ class ExperimentConfig(BaseModel):
         return ExperimentConfig(
             data_root_path=data_root_path,
             modeldataset_type=modeldataset_type,
+            task=task,
             train_config=train_config,
             mlflow_config=mlflow_config,
             modeldataset_config=modeldataset_config
