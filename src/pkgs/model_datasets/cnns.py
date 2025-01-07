@@ -2,7 +2,7 @@ import os
 import torch
 from lightning.pytorch import LightningModule
 from torch.utils.data import DataLoader, Dataset
-from torchmetrics.classification import BinaryJaccardIndex
+from torchmetrics.functional import jaccard_index
 import segmentation_models_pytorch as smp
 
 from src.utils.data_loads import get_image_path, load_image, load_mask
@@ -70,8 +70,7 @@ class CNNModelDataset(BaseModelDataset):
 class UNetppLightning(LightningModule):
     def __init__(self, config: ModelDatasetConfig):
         super(UNetppLightning, self).__init__()
-        # iouの使い方 Pred: (N, C, H, W), Target: (N, H, W)
-        self.iou = BinaryJaccardIndex()
+        self.num_classes = config.num_classes
         
         self.model = smp.UnetPlusPlus(
             encoder_name=config.cnn_setting.backborn,        # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
@@ -95,12 +94,9 @@ class UNetppLightning(LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        # self.logger.experiment.log_metric(key = "train_loss", value = loss)
         self.log('train_loss', loss, on_epoch=True)
 
-        y_hat_class = (torch.sigmoid(y_hat) > 0.5).float()  # Sigmoid activation function is added here
-        iou_score = self.iou(y_hat_class, y)
-        self.log('train_IoU', iou_score, on_epoch=True)
+        self._record_iou(y_hat, y, "train", labels=["background", "crop", "weed"])
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -109,9 +105,8 @@ class UNetppLightning(LightningModule):
         loss = self.criterion(y_hat, y)
         self.log('val_loss', loss, on_epoch=True)
 
-        y_hat_class = (torch.sigmoid(y_hat) > 0.5).float()  # Sigmoid activation function is added here
-        iou_score = self.iou(y_hat_class, y)
-        self.log('val_IoU', iou_score, on_epoch=True)
+        self._record_iou(y_hat, y, "val", labels=["background", "crop", "weed"])
+        return loss
 
     def test_step(self, batch, batch_idx):
         x, y = batch
@@ -119,14 +114,21 @@ class UNetppLightning(LightningModule):
         loss = self.criterion(y_hat, y)
         self.log('test_loss', loss, on_epoch=True)
 
-        y_hat_class = (torch.sigmoid(y_hat) > 0.5).float()
-        iou_score = self.iou(y_hat_class, y)
-        self.log('test_IoU', iou_score, on_epoch=True)
+        self._record_iou(y_hat, y, "test", labels=["background", "crop", "weed"])
+        return loss
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=0.001, weight_decay=1e-5)  # weight decay added
         return optimizer
-
+    
+    def _record_iou(self, y_hat, y, step:str, 
+                    labels=["background", "crop", "weed"]):
+        # IoUを計算して記録
+        y_hat_class = (torch.sigmoid(y_hat) > 0.5).float()
+        iou_scores = jaccard_index(y_hat_class, y, task='multiclass', num_classes=len(labels), average=None)
+        for i, label in enumerate(labels):
+            self.log(f"{step}_{label}_IoU", iou_scores[i], on_epoch=True)
+        
 
 class CNNDataset(Dataset):
     def __init__(

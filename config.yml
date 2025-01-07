@@ -1,7 +1,7 @@
 # Common settings
 experiment:
   data_root_path: ./src/pkgs/datasets/test_dataset
-  modeldataset_type: transformer  # transformer | cnn | patch1d | patch2d | two
+  modeldataset_type: cnn  # transformer | cnn | patch1d | patch2d | two
 
   train_config:
     max_epochs: 2
