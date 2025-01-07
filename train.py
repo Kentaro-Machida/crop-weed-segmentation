@@ -1,10 +1,20 @@
 import mlflow
+from mlflow import MlflowClient
 from lightning.pytorch import Trainer
 import yaml
-from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping
+from lightning.pytorch.callbacks import EarlyStopping
 
 from src.pkgs.data_classes.config_class import ExperimentConfig, TrainConfig, MLflowConfig
 from src.pkgs.model_datasets.model_dataset_factory import ModelDatasetFactory
+
+def print_auto_logged_info(r):
+    tags = {k: v for k, v in r.data.tags.items() if not k.startswith("mlflow.")}
+    artifacts = [f.path for f in MlflowClient().list_artifacts(r.info.run_id, "model")]
+    print(f"run_id: {r.info.run_id}")
+    print(f"artifacts: {artifacts}")
+    print(f"params: {r.data.params}")
+    print(f"metrics: {r.data.metrics}")
+    print(f"tags: {tags}")
 
 def main():
     with open("./config.yml") as f:
@@ -23,15 +33,6 @@ def main():
     train_loader = model_dataset_dict["train_loader"]
     val_loader = model_dataset_dict["val_loader"]
 
-    # Callbacks
-    checkpoint_callback = ModelCheckpoint(
-        monitor="val_loss",  # Metric to monitor
-        dirpath="checkpoints/",  # Directory to save checkpoints
-        filename="best-checkpoint-{epoch:02d}-{val_loss:.2f}",
-        save_top_k=1,  # Save only the best model
-        mode="min"  # Minimize the monitored metric
-    )
-
     early_stopping_callback = EarlyStopping(
         monitor="val_loss",
         patience=5,  # Number of epochs to wait before stopping
@@ -42,15 +43,18 @@ def main():
         max_epochs=train_config.max_epochs,
         accelerator='cpu',
         devices=1,
-        callbacks=[checkpoint_callback, early_stopping_callback],
+        callbacks=[early_stopping_callback],
         log_every_n_steps=10
     )
 
     # Auto log all MLflow entities
     mlflow.pytorch.autolog()
 
-    with mlflow.start_run():
+    with mlflow.start_run() as run:
         trainer.fit(model, train_loader, val_loader)
+        mlflow.log_artifact(local_path="./config.yml")
+    
+    print_auto_logged_info(mlflow.get_run(run_id=run.info.run_id))
 
 if __name__ == "__main__":
     main()

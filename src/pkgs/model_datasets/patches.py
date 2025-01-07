@@ -2,7 +2,7 @@ import os
 import pickle
 import torch
 import numpy as np
-import pytorch_lightning as pl
+from lightning.pytorch import LightningModule
 from torch.utils.data import DataLoader, Dataset
 from torchmetrics.classification import BinaryJaccardIndex
 import segmentation_models_pytorch as smp
@@ -109,7 +109,7 @@ class Patch2dModelDataset(BaseModelDataset):
         )
 
 
-class UNetppLightning(pl.LightningModule):
+class UNetppLightning(LightningModule):
     def __init__(self, config: ModelDatasetConfig):
         super(UNetppLightning, self).__init__()
         self.iou = BinaryJaccardIndex()
@@ -136,7 +136,7 @@ class UNetppLightning(pl.LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        self.log('train_loss_{}'.format(self.criterion), loss, on_epoch=True)
+        self.log('train_loss'.format(self.criterion), loss, on_epoch=True)
 
         y_hat_class = (torch.sigmoid(y_hat) > 0.5).float()  # Sigmoid activation function is added here
         iou_score = self.iou(y_hat_class, y)
@@ -147,7 +147,7 @@ class UNetppLightning(pl.LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        self.log('val_loss_{}'.format(self.criterion), loss, on_epoch=True)
+        self.log('val_loss'.format(self.criterion), loss, on_epoch=True)
 
         y_hat_class = (torch.sigmoid(y_hat) > 0.5).float()  # Sigmoid activation function is added here
         iou_score = self.iou(y_hat_class, y)

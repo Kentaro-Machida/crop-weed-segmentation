@@ -1,7 +1,7 @@
 import os 
 import torch
 import numpy as np
-import pytorch_lightning as pl
+from lightning.pytorch import LightningModule
 from torch.utils.data import DataLoader, Dataset
 from torchmetrics.classification import BinaryJaccardIndex
 
@@ -133,7 +133,7 @@ class SegformerDataset(Dataset):
         return SegFormer_input
 
 
-class TransformerLightning(pl.LightningModule):
+class TransformerLightning(LightningModule):
     def __init__(self, config: ModelDatasetConfig):
         super(TransformerLightning, self).__init__()
         self.config = config
@@ -161,6 +161,7 @@ class TransformerLightning(pl.LightningModule):
         targets = batch["labels"]
         outputs = self.model(pixel_values=inputs, labels=targets)
         loss = outputs.loss
+        self.log("train_loss", loss)
         return loss
 
     def validation_step(self, batch, batch_idx):
