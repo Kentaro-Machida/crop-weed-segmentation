@@ -1,7 +1,7 @@
-import pytorch_lightning as pl
+import mlflow
+from lightning.pytorch import Trainer
 import yaml
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
-from pytorch_lightning.loggers import MLFlowLogger
+from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping
 
 from src.pkgs.data_classes.config_class import ExperimentConfig, TrainConfig, MLflowConfig
 from src.pkgs.model_datasets.model_dataset_factory import ModelDatasetFactory
@@ -38,22 +38,19 @@ def main():
         mode="min"
     )
 
-    mlflow_config = MLflowConfig.model_validate(config["experiment"]["mlflow_config"])
-    logger = MLFlowLogger(
-        experiment_name=mlflow_config.experiment_name,
-        tracking_uri=mlflow_config.tracking_uri
-    )
-    logger.log_hyperparams(config["experiment"])
-
-    trainer = pl.Trainer(
+    trainer = Trainer(
         max_epochs=train_config.max_epochs,
         accelerator='cpu',
         devices=1,
         callbacks=[checkpoint_callback, early_stopping_callback],
-        logger=logger,
         log_every_n_steps=10
     )
-    trainer.fit(model, train_loader, val_loader)
+
+    # Auto log all MLflow entities
+    mlflow.pytorch.autolog()
+
+    with mlflow.start_run():
+        trainer.fit(model, train_loader, val_loader)
 
 if __name__ == "__main__":
     main()
