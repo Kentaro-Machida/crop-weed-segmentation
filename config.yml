@@ -2,7 +2,7 @@
 experiment:
   data_root_path: ./src/pkgs/datasets/test_dataset
   modeldataset_type: cnn  # transformer | cnn | patch1d | patch2d | two
-  task: plant  # plant | crop | all
+  task: crop  # plant | crop | all
   train_config:
     max_epochs: 2
     optimizer: adamw  # adamw 

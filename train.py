@@ -8,6 +8,9 @@ from src.pkgs.data_classes.config_class import ExperimentConfig, TrainConfig, ML
 from src.pkgs.model_datasets.model_dataset_factory import ModelDatasetFactory
 
 def print_auto_logged_info(r):
+    """
+    Logの結果を標準出力する関数
+    """
     tags = {k: v for k, v in r.data.tags.items() if not k.startswith("mlflow.")}
     artifacts = [f.path for f in MlflowClient().list_artifacts(r.info.run_id, "model")]
     print(f"run_id: {r.info.run_id}")
@@ -22,6 +25,7 @@ def main():
 
     experiment_config = ExperimentConfig.from_dict(config["experiment"])
     train_config = TrainConfig(**config["experiment"]["train_config"])
+    mlflow_config = MLflowConfig(**config["experiment"]["mlflow_config"])
     
     model_dataset_factory = ModelDatasetFactory(
         experiment_config.modeldataset_config,
@@ -59,13 +63,22 @@ def main():
     )
 
     # Auto log all MLflow entities
+    mlflow.set_experiment(mlflow_config.experiment_name)
+    mlflow.set_tracking_uri(mlflow_config.tracking_uri)
     mlflow.pytorch.autolog()
 
     with mlflow.start_run() as run:
+        # MLflowのタグを設定
+        mlflow.set_tags({
+            "model_dataset_type": experiment_config.modeldataset_type,
+            "task": experiment_config.task
+        })
         trainer.fit(model, train_loader, val_loader)
         mlflow.log_artifact(local_path="./config.yml")
 
         best_model_path = model_checkpoint_callback.best_model_path
+        # アーティファクトにモデルを保存
+        mlflow.log_artifact(local_path=best_model_path)
         trainer.test(dataloaders=test_loader, ckpt_path=best_model_path)
     
     print_auto_logged_info(mlflow.get_run(run_id=run.info.run_id))

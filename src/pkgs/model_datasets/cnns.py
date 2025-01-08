@@ -7,8 +7,7 @@ import segmentation_models_pytorch as smp
 
 from src.utils.data_loads import get_image_path, load_image
 from src.pkgs.preproceses.data_augmentation import DataTransformBuilder
-from ..data_classes.config_class import ModelDatasetConfig
-from .base_model_dataset import BaseModelDataset
+from .base_model_dataset import BaseModelDataset, BaseDataset
 from src.pkgs.data_classes.config_class import ModelDatasetConfig
 
 
@@ -131,7 +130,7 @@ class UNetppLightning(LightningModule):
             self.log(f'{step}_IoU_{label}', iou_scores[i], on_epoch=True)
         
 
-class CNNDataset(Dataset):
+class CNNDataset(BaseDataset):
     def __init__(
         self,
         img_path_list: list,
@@ -180,4 +179,7 @@ class CNNDataset(Dataset):
         mask = torch.nn.functional.one_hot(mask, num_classes=self.num_classes).permute(2, 0, 1).float()
 
         return img, mask
+    
+    def get_image_mask_path(self, idx) -> tuple:
+        return self.img_path_list[idx], self.mask_path_list[idx]
     

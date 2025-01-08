@@ -1,6 +1,27 @@
+from torch.utils.data import Dataset
+
 from abc import ABC, abstractmethod
 from src.pkgs.data_classes.config_class import ModelDatasetConfig
 from src.pkgs.preproceses.data_augmentation import DataTransformBuilder
+
+
+class BaseDataset(ABC, Dataset):
+    """
+    Base class for dataset.
+    このクラスの子クラスは、データセットを返す責任を追う
+    """
+
+    @abstractmethod
+    def __len__(self):
+        pass
+
+    @abstractmethod
+    def __getitem__(self, idx):
+        pass
+
+    @abstractmethod
+    def get_image_mask_path(self, idx):
+        pass
 
 
 class BaseModelDataset(ABC):
