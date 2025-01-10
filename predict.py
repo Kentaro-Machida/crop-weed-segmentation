@@ -37,7 +37,7 @@ def predict(experiment_id: str, run_id: str):
     label_dict = task_to_label_dict(experiment_config.task)
 
     model = UNetppLightning.load_from_checkpoint(model_path, label_dict=label_dict, config=model_dataset_config)
-    test_set = 
+    # test_set = 
 
 if __name__ == "__main__":
     predict("685040055724994125", "148e22baf384423faad772ba5ab6ba3c")

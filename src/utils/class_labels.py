@@ -1,4 +1,4 @@
-def tast_to_label_dict(task: str)->dict:
+def task_to_label_dict(task: str)->dict:
     """
     このリポジトリ全体で使用されるtaskとlabel_dictの対応を返す関数
     Args:

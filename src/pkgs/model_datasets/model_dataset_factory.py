@@ -5,7 +5,7 @@ from src.pkgs.model_datasets.transformer import TransformerModelDataset
 from src.pkgs.model_datasets.patches import Patch2dModelDataset
 from src.pkgs.model_datasets.cnns import CNNModelDataset
 from src.utils.data_loads import load_mask
-from src.utils.class_labels import tast_to_label_dict
+from src.utils.class_labels import task_to_label_dict
 
 class ModelDatasetFactory:
     """
@@ -24,7 +24,7 @@ class ModelDatasetFactory:
         self.data_root_path = data_root_path
         self.model_dataset_type = model_dataset_type
         self.load_mask_func = partial(load_mask, task=task)
-        self.label_dict = tast_to_label_dict(task)
+        self.label_dict = task_to_label_dict(task)
 
     
     def create(self)->dict:
