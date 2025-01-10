@@ -46,3 +46,18 @@ experiment:
     cnn_setting:
       backborn: mobilenet_v2
 
+# Config for predict.py
+predict:
+  data_root_path: ./src/pkgs/datasets/test_dataset
+  tracking_dir: "./mlruns"
+  task: crop  # plant | crop | all | crop_weed
+
+  one_model_config:
+    experiment_id: 427360906595973495
+    run_id: 427360906595973495
+
+  crop_weed_model_config:
+    crop_experiment_id: 427360906595973495
+    crop_run_id: 427360906595973495
+    weed_experiment_id: 427360906595973495
+    weed_run_id: 427360906595973495

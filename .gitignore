@@ -167,6 +167,9 @@ cython_debug/
 # config file
 *.config.yml*
 
+# datasets
+/datasets/v1_Easy.v2i.png-mask-semantic
+
 /src/pkgs/datasets/test_dataset/_cache/
 
 # MLflow logs

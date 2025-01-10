@@ -2,6 +2,7 @@ import mlflow
 from mlflow import MlflowClient
 from lightning.pytorch import Trainer
 import yaml
+import tempfile
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 
 from src.pkgs.data_classes.config_class import ExperimentConfig, TrainConfig, MLflowConfig
@@ -19,8 +20,8 @@ def print_auto_logged_info(r):
     print(f"metrics: {r.data.metrics}")
     print(f"tags: {tags}")
 
-def main():
-    with open("./config.yml") as f:
+def train(yaml_path: str, tempdir: str):
+    with open(yaml_path) as f:
         config = yaml.safe_load(f)
 
     experiment_config = ExperimentConfig.from_dict(config["experiment"])
@@ -46,9 +47,10 @@ def main():
         mode="min"
     )
 
+    # 一時ディレクトリを作成
     model_checkpoint_callback = ModelCheckpoint(
         monitor="val_loss",
-        dirpath="./best_model",
+        dirpath=tempdir,
         filename="best_model",
         save_top_k=1,
         mode="min"
@@ -84,4 +86,5 @@ def main():
     print_auto_logged_info(mlflow.get_run(run_id=run.info.run_id))
 
 if __name__ == "__main__":
-    main()
+    with tempfile.TemporaryDirectory() as tempdir:
+        train("./config.yml", tempdir)    
