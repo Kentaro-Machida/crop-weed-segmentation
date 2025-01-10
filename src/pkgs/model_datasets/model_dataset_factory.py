@@ -38,15 +38,13 @@ class ModelDatasetFactory:
         """        
         if self.model_dataset_type == "transformer":
             modeldataset = TransformerModelDataset(self.config, self.data_root_path)
-            return modeldataset.get_model_datasets()
         elif self.model_dataset_type == "patch2d":
             modeldataset = Patch2dModelDataset(self.config, self.data_root_path)
-            return modeldataset.get_model_datasets()
         elif self.model_dataset_type == "cnn":
             modeldataset = CNNModelDataset(self.config, self.data_root_path, self.load_mask_func, self.label_dict)
-            return modeldataset.get_model_datasets()
         else:
             raise ValueError(f"model_dataset_type: {self.model_dataset_type} is not supported.")
+        return modeldataset
         
 
 if __name__ == "__main__":

@@ -19,10 +19,6 @@ class BaseDataset(ABC, Dataset):
     def __getitem__(self, idx):
         pass
 
-    @abstractmethod
-    def get_image_mask_path(self, idx):
-        pass
-
 
 class BaseModelDataset(ABC):
     """
@@ -45,6 +41,14 @@ class BaseModelDataset(ABC):
             "test_dataset": test_dataset_name
         }
         """
+        pass
+
+    @abstractmethod
+    def get_dataset(self):
+        pass
+
+    @abstractmethod
+    def get_model(self):
         pass
 
 

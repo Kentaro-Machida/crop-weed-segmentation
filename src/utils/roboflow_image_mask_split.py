@@ -42,6 +42,29 @@ def copy_and_verify_files(target_dir):
     else:
         print("整合性が取れました。処理を完了しました。")
 
+def sort_and_check_consistncy(img_paths: list, mask_paths: list):
+    """
+    Sort image and mask paths and check consistency.
+    """
+    sorted_img_paths = sorted(img_paths)
+    sorted_mask_paths = sorted(mask_paths)
+
+    if len(sorted_img_paths) != len(sorted_mask_paths):
+        print("Number of images and masks are different. Check the dataset")
+        sys.exit(1)
+
+    for img_path, mask_path in zip(sorted_img_paths, sorted_mask_paths):
+        img_name = Path(img_path).stem
+        mask_name = Path(mask_path).stem.replace("_mask", "")
+
+        if img_name != mask_name:
+            print("Image and mask names are different.")
+            print(f"Image name: {img_name}")
+            print(f"Mask name: {mask_name}")
+            sys.exit(1)
+
+    return sorted_img_paths, sorted_mask_paths
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("対象ディレクトリを指定してください。")

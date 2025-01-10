@@ -34,7 +34,8 @@ def train(yaml_path: str, tempdir: str):
         experiment_config.modeldataset_type,
         task=config["experiment"]["task"]
         )
-    model_dataset_dict = model_dataset_factory.create()
+    model_dataset = model_dataset_factory.create()
+    model_dataset_dict = model_dataset.get_model_datasets()
     
     model = model_dataset_dict["model"]
     train_loader = model_dataset_dict["train_loader"]
