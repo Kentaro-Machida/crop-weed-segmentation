@@ -168,7 +168,7 @@ cython_debug/
 *.config.yml*
 
 # datasets
-/datasets/v1_Easy.v2i.png-mask-semantic
+/datasets/v1_Easy.v2i.png-mask-semantic/
 
 /src/pkgs/datasets/test_dataset/_cache/
 
@@ -176,3 +176,6 @@ cython_debug/
 mlruns/
 checkpoints/
 best_model/
+
+# others
+.DS_Store
