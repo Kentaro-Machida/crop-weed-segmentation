@@ -22,9 +22,17 @@ class DataTransformBuilder:
             transforms.append(A.VerticalFlip(p=0.5))
         if self.config.horizontal_flip:
             transforms.append(A.HorizontalFlip(p=0.5))
+        
+        transforms.append(A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255, p=1.0))
             
-
         return A.Compose(transforms)
+
+
+def get_normalizer(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255):
+    """
+    Get normalizer for image.
+    """
+    return A.Compose([A.Normalize(mean=mean, std=std, max_pixel_value=max_pixel_value)])
 
 
 if __name__ == '__main__':

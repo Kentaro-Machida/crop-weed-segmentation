@@ -6,8 +6,9 @@ from torchmetrics.functional import jaccard_index
 import segmentation_models_pytorch as smp
 
 from src.utils.data_loads import get_image_path, load_image
+from src.utils import check_no_overlap
 from src.utils.roboflow_image_mask_split import sort_and_check_consistncy
-from src.pkgs.preproceses.data_augmentation import DataTransformBuilder
+from src.pkgs.preproceses.data_augmentation import DataTransformBuilder, get_normalizer
 from .base_model_dataset import BaseModelDataset, BaseDataset
 from src.pkgs.data_classes.config_class import ModelDatasetConfig
 
@@ -21,7 +22,7 @@ class CNNModelDataset(BaseModelDataset):
         self.model = UNetppLightning(config, label_dict=label_dict)
 
         # 以下はModelDataset系統クラスにおいて共通の処理
-        self._data_augmentator = DataTransformBuilder(config.data_augmentation_config)
+        data_augmentator = DataTransformBuilder(config.data_augmentation_config)
         self.load_mask_func = load_mask_func
         self.label_dict = label_dict
 
@@ -41,9 +42,15 @@ class CNNModelDataset(BaseModelDataset):
         self._val_img_paths, self._val_mask_paths = sort_and_check_consistncy(self._val_img_paths, self._val_mask_paths)
         self._test_img_paths, self._test_mask_paths = sort_and_check_consistncy(self._test_img_paths, self._test_mask_paths)
 
-        self._train_dataset = self._get_dataset(self._train_img_paths, self._train_mask_paths, self._data_augmentator)
-        self._val_dataset = self._get_dataset(self._val_img_paths, self._val_mask_paths)
-        self._test_dataset = self._get_dataset(self._test_img_paths, self._test_mask_paths)
+        # データリークの確認
+        if not check_no_overlap(self._train_img_paths, self._val_img_paths, self._test_img_paths):
+            raise ValueError(f"Data leak detected. Please check the dataset in {data_root_path}.")
+
+        # データセットを作成
+        normalizer = get_normalizer()
+        self._train_dataset = self._get_dataset(self._train_img_paths, self._train_mask_paths, data_augmentator)
+        self._val_dataset = self._get_dataset(self._val_img_paths, self._val_mask_paths, normalizer)
+        self._test_dataset = self._get_dataset(self._test_img_paths, self._test_mask_paths, normalizer)
 
     def get_model_datasets(self):
 

@@ -59,7 +59,7 @@ def train(yaml_path: str, tempdir: str):
 
     trainer = Trainer(
         max_epochs=train_config.max_epochs,
-        accelerator='cpu',
+        accelerator=experiment_config.device,
         devices=1,
         callbacks=[early_stopping_callback, model_checkpoint_callback],
         log_every_n_steps=10

@@ -4,29 +4,26 @@
 
 import yaml
 import os
-from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
+import cv2
 import logging
 
-from src.pkgs.data_classes.config_class import ExperimentConfig, TrainConfig, MLflowConfig
+from src.pkgs.data_classes.config_class import ExperimentConfig
 from src.pkgs.model_datasets.model_dataset_factory import ModelDatasetFactory
 from src.utils.class_labels import task_to_label_dict
-from src.utils.data_loads import load_image, load_mask
+from src.utils.data_loads import load_image
 from src.utils.visualize import save_overlayed_image
 
 # ロガーの設定
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-def predict(experiment_id: str, run_id: str):
+def predict(predict_config_dict: dict):
     logger.info("Prediction script started")
-    with open("./config.yml") as f:
-        logger.info("Loading configuration file: ./config.yml")
-        config = yaml.safe_load(f)
-    predict_config_dict = config["predict"]
 
     # 実験ディレクトリのパス
-    experiment_dir = os.path.join(predict_config_dict["tracking_dir"], experiment_id)
-    run_dir = os.path.join(experiment_dir, run_id)
+    one_model_config = predict_config_dict["one_model_config"]
+    experiment_dir = os.path.join(predict_config_dict["tracking_dir"], one_model_config["experiment_id"])
+    run_dir = os.path.join(experiment_dir, one_model_config["run_id"])
     config_path = os.path.join(run_dir, "artifacts/config.yml")
     model_path = os.path.join(run_dir, "artifacts/best_model.ckpt")
 
@@ -67,7 +64,7 @@ def predict(experiment_id: str, run_id: str):
     )
 
     logger.info("Model and dataset prepared. Beginning prediction.")
-    image_paths, mask_paths = model_dataset.get_image_mask_paths("test")
+    image_paths, _ = model_dataset.get_image_mask_paths("test")
     
     for i, (tensor, mask) in enumerate(dataset):
         logger.info(f"Processing image {i + 1}/{len(dataset)}")
@@ -80,9 +77,15 @@ def predict(experiment_id: str, run_id: str):
             reseized_height=model_dataset_config.image_height,
             reseized_width=model_dataset_config.image_width
         )
+
+        # Save input image to output directory
+        input_image_name = image_paths[i].split("/")[-1]
+        input_image_path = os.path.join(output_save_dir, input_image_name)
+        logger.info(f"Saving input image to: {input_image_path}")
+        cv2.imwrite(input_image_path, input_image)
         
         # Save overlayed ground truth mask
-        ground_truth_name = image_paths[i].split("/")[-1] + "gt_overlayed.jpg"
+        ground_truth_name = image_paths[i].split("/")[-1] + "_gt_overlayed.jpg"
         ground_truth_path = os.path.join(output_save_dir, ground_truth_name)
         logger.info(f"Saving ground truth overlayed image to: {ground_truth_path}")
         save_overlayed_image(
@@ -92,7 +95,7 @@ def predict(experiment_id: str, run_id: str):
         )
 
         # Save overlayed predicted mask
-        predicted_name = image_paths[i].split("/")[-1] + "pred_overlayed.jpg"
+        predicted_name = image_paths[i].split("/")[-1] + "_pred_overlayed.jpg"
         predicted_path = os.path.join(output_save_dir, predicted_name)
         logger.info(f"Saving predicted overlayed image to: {predicted_path}")
         save_overlayed_image(
@@ -100,9 +103,12 @@ def predict(experiment_id: str, run_id: str):
             mask=pred_mask_2d,
             save_path=predicted_path
         )
-        break
 
     logger.info("Prediction script finished successfully.")
 
 if __name__ == "__main__":
-    predict("685040055724994125", "148e22baf384423faad772ba5ab6ba3c")
+    with open("./config.yml") as f:
+        logger.info("Loading configuration file: ./config.yml")
+        config = yaml.safe_load(f)
+    predict_config_dict = config["predict"]
+    predict(predict_config_dict)

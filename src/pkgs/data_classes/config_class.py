@@ -121,6 +121,7 @@ class ExperimentConfig(BaseModel):
     data_root_path: str  # train, val, test folders are needed in this path
     modeldataset_type: str  
     task: str
+    device: str
 
     train_config: TrainConfig
     mlflow_config: MLflowConfig
@@ -151,6 +152,7 @@ class ExperimentConfig(BaseModel):
         data_root_path = config_dict["data_root_path"]
         modeldataset_type = config_dict["modeldataset_type"]
         task = config_dict["task"]
+        device = config_dict["device"]
 
         train_config = TrainConfig(**config_dict["train_config"])
         mlflow_config = MLflowConfig(**config_dict["mlflow_config"])
@@ -160,6 +162,7 @@ class ExperimentConfig(BaseModel):
             data_root_path=data_root_path,
             modeldataset_type=modeldataset_type,
             task=task,
+            device=device,
             train_config=train_config,
             mlflow_config=mlflow_config,
             modeldataset_config=modeldataset_config

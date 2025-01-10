@@ -51,6 +51,10 @@ class BaseModelDataset(ABC):
     def get_model(self):
         pass
 
+    @abstractmethod
+    def get_image_mask_paths(self):
+        pass
+
 
 class TestModelDataset(BaseModelDataset):
     """

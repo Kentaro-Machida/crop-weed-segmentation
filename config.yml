@@ -1,10 +1,11 @@
 # Common settings
 experiment:
-  data_root_path: ./src/pkgs/datasets/test_dataset
+  data_root_path: ./datasets/v1_Easy.v2i.png-mask-semantic
   modeldataset_type: cnn  # transformer | cnn | patch1d | patch2d | two
   task: crop  # plant | crop | all
+  device: gpu  # cpu | gpu | tpu | hpu | auto
   train_config:
-    max_epochs: 2
+    max_epochs: 50
     optimizer: adamw  # adamw 
     scheduler: step  # step | plateau
 
@@ -53,8 +54,8 @@ predict:
   task: crop  # plant | crop | all | crop_weed
 
   one_model_config:
-    experiment_id: 427360906595973495
-    run_id: 427360906595973495
+    experiment_id: "536188172231323112"
+    run_id: 6012dc9d00f74cf3a9757a6ca0197914
 
   crop_weed_model_config:
     crop_experiment_id: 427360906595973495
