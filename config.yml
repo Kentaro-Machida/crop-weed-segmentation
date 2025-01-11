@@ -14,12 +14,12 @@ experiment:
     experiment_name: experiment_name
 
   modeldataset_config:
-    image_height: 224
-    image_width: 224
+    image_height: 128
+    image_width: 128
     lr: 0.0001
     criterion: dice  # cross_entropy | dice
     metric: binary_jaccard  
-    batch_size: 1
+    batch_size: 2
 
     data_augmentation_config:
       vertical_flip: True
@@ -41,7 +41,9 @@ experiment:
 
     # If model_dataset_type is model_dataset_type = transformer, you need to set transformer_setting
     transformer_setting:
-      pretrained_model: nvidia/segformer-b5-finetuned-cityscapes-1024-1024
+      # nvidia/segformer-b5-finetuned-cityscapes-1024-1024は画像サイズの設定を256x256にする必要あり
+      # nvidia/segformer-b0-finetuned-cityscapes-768-768は画像サイズの設定を128x128にする必要あり
+      pretrained_model: nvidia/segformer-b0-finetuned-cityscapes-768-768
 
     # If model_dataset_type is model_dataset_type = cnn, you need to set cnn_setting
     cnn_setting:

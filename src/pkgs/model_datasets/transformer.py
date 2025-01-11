@@ -53,7 +53,6 @@ class TransformerModelDataset(BaseModelDataset):
             raise ValueError(f"Data leak detected. Please check the dataset in {data_root_path}.")
 
         # データセットを作成
-        normalizer = get_normalizer()
         self._train_dataset = self._get_dataset(self._train_img_paths, self._train_mask_paths, data_augmentator)
         self._val_dataset = self._get_dataset(self._val_img_paths, self._val_mask_paths)
         self._test_dataset = self._get_dataset(self._test_img_paths, self._test_mask_paths)
@@ -203,7 +202,10 @@ class TransformerLightning(BaseLightningModule):
         targets = batch["labels"]
         outputs = self.model(pixel_values=inputs, labels=targets)
         loss = outputs.loss
+        logits = outputs.logits
         self.log("train_loss", loss)
+        self.record_iou(logits, targets, "train")
+        self.record_pixel_accuracy(logits, targets, "train")
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -211,7 +213,10 @@ class TransformerLightning(BaseLightningModule):
         targets = batch["labels"]
         outputs = self.model(pixel_values=inputs, labels=targets)
         loss = outputs.loss
+        logits = outputs.logits
         self.log("val_loss", loss)
+        self.record_iou(logits, targets, "val")
+        self.record_pixel_accuracy(logits, targets, "val")
         return loss
     
     def test_step(self, batch, batch_idx):
@@ -219,7 +224,10 @@ class TransformerLightning(BaseLightningModule):
         targets = batch["labels"]
         outputs = self.model(pixel_values=inputs, labels=targets)
         loss = outputs.loss
-        self.log("test_loss", loss)
+        logits = outputs.logits
+        self.log("val_loss", loss)
+        self.record_iou(logits, targets, "test")
+        self.record_pixel_accuracy(logits, targets, "test")
         return loss
     
     def predict_step(self, batch, batch_idx):
