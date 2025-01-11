@@ -3,7 +3,7 @@ experiment:
   data_root_path: ./datasets/v1_Easy.v2i.png-mask-semantic  # Path includes train, val and test folders
   modeldataset_type: transformer  # transformer | cnn | patch1d | patch2d | two
   task: 3_classes  # plant | crop | 3_classes | 5_classes
-  device: cpu  # cpu | gpu | tpu | hpu | auto
+  device: gpu  # cpu | gpu | tpu | hpu | auto
   train_config:
     max_epochs: 50
     optimizer: adamw  # adamw 
@@ -19,7 +19,7 @@ experiment:
     lr: 0.0001
     criterion: dice  # cross_entropy | dice
     metric: binary_jaccard  
-    batch_size: 4
+    batch_size: 1
 
     data_augmentation_config:
       vertical_flip: True
@@ -55,7 +55,7 @@ predict:
 
   one_model_config:
     experiment_id: "865153750648612543"
-    run_id: 3a4fd03b706141c4a21d720e0339dbea
+    run_id: 1b50882c57fe4eabb4dfa9d24e13c833
 
   crop_weed_model_config:
     crop_experiment_id: 427360906595973495

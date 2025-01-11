@@ -191,14 +191,17 @@ class TransformerLightning(BaseLightningModule):
             ignore_mismatched_sizes=True
         )
 
-    def forward(self, x):
-        return self.model(x)
+    def forward(self, batch):
+        # (C, H, W) -> (N, C, H, W)
+        inputs = batch["pixel_values"].unsqueeze(0)
+        targets = batch["labels"].unsqueeze(0)
+        outputs = self.model(pixel_values=inputs, labels=targets)
+        return outputs
 
     def training_step(self, batch, batch_idx):
         inputs = batch["pixel_values"]
         targets = batch["labels"]
         outputs = self.model(pixel_values=inputs, labels=targets)
-        print(outputs)
         loss = outputs.loss
         self.log("train_loss", loss)
         return loss
