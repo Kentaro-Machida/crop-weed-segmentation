@@ -1,15 +1,13 @@
 import os 
 import torch
-from lightning.pytorch import LightningModule
 from torch.utils.data import DataLoader
-from torchmetrics.functional import jaccard_index
 import segmentation_models_pytorch as smp
 
 from src.utils.data_loads import get_image_path, load_image
 from src.utils import check_no_overlap
 from src.utils.roboflow_image_mask_split import sort_and_check_consistncy
 from src.pkgs.preproceses.data_augmentation import DataTransformBuilder, get_normalizer
-from .base_model_dataset import BaseModelDataset, BaseDataset
+from .base_model_dataset import BaseModelDataset, BaseDataset, BaseLightningModule
 from src.pkgs.data_classes.config_class import ModelDatasetConfig
 
 
@@ -106,7 +104,7 @@ class CNNModelDataset(BaseModelDataset):
             raise ValueError(f"phase: {phase} is not supported.")
 
 
-class UNetppLightning(LightningModule):
+class UNetppLightning(BaseLightningModule):
     def __init__(self, config: ModelDatasetConfig, label_dict:dict):
         super(UNetppLightning, self).__init__()
         self.num_classes = len(label_dict)
@@ -138,7 +136,8 @@ class UNetppLightning(LightningModule):
         loss = self.loss_func(y_hat, y)
         self.log('train_loss', loss, on_epoch=True)
 
-        self._record_iou(y_hat, y, "train")
+        self.record_iou(y_hat, y, "train")
+        self.record_pixel_accuracy(y_hat, y, "train")
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -147,7 +146,8 @@ class UNetppLightning(LightningModule):
         loss = self.loss_func(y_hat, y)
         self.log('val_loss', loss, on_epoch=True)
 
-        self._record_iou(y_hat, y, "val")
+        self.record_iou(y_hat, y, "val")
+        self.record_pixel_accuracy(y_hat, y, "val")
         return loss
 
     def test_step(self, batch, batch_idx):
@@ -156,7 +156,8 @@ class UNetppLightning(LightningModule):
         loss = self.loss_func(y_hat, y)
         self.log('test_loss', loss, on_epoch=True)
 
-        self._record_iou(y_hat, y, "test")
+        self.record_iou(y_hat, y, "test")
+        self.record_pixel_accuracy(y_hat, y, "test")
         return loss
     
     def predict_step(self, batch, batch_idx):
@@ -168,13 +169,6 @@ class UNetppLightning(LightningModule):
         optimizer = torch.optim.Adam(self.parameters(), lr=0.001, weight_decay=1e-5)  # weight decay added
         return optimizer
     
-    def _record_iou(self, y_hat, y, step:str):
-        # IoUを計算して記録
-        y_hat_probs = torch.softmax(y_hat, dim=1)  # 確率分布を計算
-        y_hat_class = torch.argmax(y_hat_probs, dim=1)
-        iou_scores = jaccard_index(y_hat_class, y, task='multiclass', num_classes=len(self.label_dict), average=None)
-        for label, i in self.label_dict.items():
-            self.log(f'{step}_IoU_{label}', iou_scores[i], on_epoch=True)
 
     def _get_cross_entropy_loss(self, y_hat, y):
         """

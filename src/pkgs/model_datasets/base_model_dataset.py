@@ -1,4 +1,7 @@
+import torch
+from torchmetrics.functional import jaccard_index, accuracy
 from torch.utils.data import Dataset
+from lightning.pytorch import LightningModule
 
 from abc import ABC, abstractmethod
 from src.pkgs.data_classes.config_class import ModelDatasetConfig
@@ -20,6 +23,52 @@ class BaseDataset(ABC, Dataset):
         pass
 
 
+class BaseLightningModule(ABC, LightningModule):
+    """
+    Base class for LightningModule.
+    このクラスの子クラスは、LightningModuleを返す責任を追う
+    """
+    @abstractmethod
+    def forward(self, x):
+        pass
+
+    @abstractmethod
+    def training_step(self, batch, batch_idx):
+        pass
+
+    @abstractmethod
+    def validation_step(self, batch, batch_idx):
+        pass
+
+    @abstractmethod
+    def test_step(self, batch, batch_idx):
+        pass
+
+    @abstractmethod
+    def predict_step(self):
+        pass
+
+    @abstractmethod
+    def configure_optimizers(self):
+        pass
+
+    def record_iou(self, y_hat, y, step:str):
+        # IoUを計算して記録
+        y_hat_probs = torch.softmax(y_hat, dim=1)  # 確率分布を計算
+        y_hat_class = torch.argmax(y_hat_probs, dim=1)
+        iou_scores = jaccard_index(y_hat_class, y, task='multiclass', num_classes=len(self.label_dict), average=None)
+        for label, i in self.label_dict.items():
+            self.log(f'{step}_IoU_{label}', iou_scores[i], on_epoch=True)
+
+    def record_pixel_accuracy(self, y_hat, y, step:str):
+        # Pixel Accuracyを計算して記録
+        y_hat_probs = torch.softmax(y_hat, dim=1)
+        y_hat_class = torch.argmax(y_hat_probs, dim=1)
+        for label, i in self.label_dict.items():
+            accuracy_scores = accuracy(y_hat_class, y, num_classes=self.num_classes, average=None, task="multiclass")
+            self.log(f'{step}_Pixel_Accuracy_{label}', accuracy_scores[i], on_epoch=True)
+
+    
 class BaseModelDataset(ABC):
     """
     Base class for model and dataset.

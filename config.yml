@@ -5,7 +5,7 @@ experiment:
   task: 3_classes  # plant | crop | 3_classes | 5_classes
   device: gpu  # cpu | gpu | tpu | hpu | auto
   train_config:
-    max_epochs: 50
+    max_epochs: 10
     optimizer: adamw  # adamw 
     scheduler: step  # step | plateau
 
