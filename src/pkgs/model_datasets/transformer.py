@@ -20,7 +20,7 @@ class TransformerModelDataset(BaseModelDataset):
     """
     Pytorch Lightning で動作するTransformerモデルとデータセットを用意するクラス
     """
-    def __init__(self, config: ModelDatasetConfig, data_root_path: str, load_mask_func: callable, label_dict:dict):
+    def __init__(self, config: ModelDatasetConfig, data_root_path: str, load_mask_func: callable, label_dict:dict, data_augmentator):
         super().__init__(config)
 
         self.model = TransformerLightning(config, label_dict=label_dict)
@@ -29,7 +29,6 @@ class TransformerModelDataset(BaseModelDataset):
             self._pretrained_model
         )
         # 以下はModelDataset系統クラスにおいて共通の処理
-        self._data_augmentator = DataTransformBuilder(config.data_augmentation_config)
         self.load_mask_func = load_mask_func
         self.label_dict = label_dict
 
@@ -55,9 +54,9 @@ class TransformerModelDataset(BaseModelDataset):
 
         # データセットを作成
         normalizer = get_normalizer()
-        self._train_dataset = self._get_dataset(self._train_img_paths, self._train_mask_paths, self._data_augmentator)
-        self._val_dataset = self._get_dataset(self._val_img_paths, self._val_mask_paths, normalizer)
-        self._test_dataset = self._get_dataset(self._test_img_paths, self._test_mask_paths, normalizer)
+        self._train_dataset = self._get_dataset(self._train_img_paths, self._train_mask_paths, data_augmentator)
+        self._val_dataset = self._get_dataset(self._val_img_paths, self._val_mask_paths)
+        self._test_dataset = self._get_dataset(self._test_img_paths, self._test_mask_paths)
 
     def get_model_datasets(self)->dict:
         return {
@@ -155,8 +154,6 @@ class SegformerDataset(BaseDataset):
             img = augmented["image"]
             mask = augmented["mask"]
 
-        img = augmented["image"]
-        mask = augmented["mask"]
         SegFormer_input = self.preprocessor(img, return_tensors="pt")
         for k,v in SegFormer_input.items():
             SegFormer_input[k].squeeze_()

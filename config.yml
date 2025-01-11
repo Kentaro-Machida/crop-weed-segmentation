@@ -1,9 +1,9 @@
 # Common settings
 experiment:
   data_root_path: ./datasets/v1_Easy.v2i.png-mask-semantic  # Path includes train, val and test folders
-  modeldataset_type: cnn  # transformer | cnn | patch1d | patch2d | two
+  modeldataset_type: transformer  # transformer | cnn | patch1d | patch2d | two
   task: 3_classes  # plant | crop | 3_classes | 5_classes
-  device: gpu  # cpu | gpu | tpu | hpu | auto
+  device: cpu  # cpu | gpu | tpu | hpu | auto
   train_config:
     max_epochs: 50
     optimizer: adamw  # adamw 
