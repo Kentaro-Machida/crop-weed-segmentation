@@ -95,7 +95,7 @@ def load_mask(
     if task == "plant":
         # backgroundクラス以外を1に、backgroundクラスを0にする
         background_label = label_dict['background']
-        
+
         mask = mask[:,:,0] != background_label
         mask = mask[:,:,np.newaxis]
 
@@ -107,7 +107,7 @@ def load_mask(
         crop_label = label_dict['crop']
 
         mask[mask == crop_label] = 1
-        mask[mask != 0] = 2
+        mask[mask >= 2] = 2
         mask = mask[:,:,np.newaxis]
 
     elif task == "crop":

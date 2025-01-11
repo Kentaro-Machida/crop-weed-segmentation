@@ -156,6 +156,11 @@ class UNetppLightning(LightningModule):
 
         self._record_iou(y_hat, y, "test")
         return loss
+    
+    def predict_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self(x)
+        return y_hat
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=0.001, weight_decay=1e-5)  # weight decay added

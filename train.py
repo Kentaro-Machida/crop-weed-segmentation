@@ -85,8 +85,11 @@ def train(yaml_path: str, tempdir: str):
         mlflow.log_artifact(local_path=best_model_path)
         trainer.test(dataloaders=test_loader, ckpt_path=best_model_path)
 
-        # best_modeL_pathのファイルを削除
-        os.remove(best_model_path)
+        # best_modeL_pathの親ディレクトリをすべて削除
+        best_model_dir = os.path.dirname(best_model_path)
+        # best_model_dirが "version"という文字列を含む場合は削除
+        if "version" in best_model_dir:
+            os.rmdir(best_model_dir)
     
     print_auto_logged_info(mlflow.get_run(run_id=run.info.run_id))
 

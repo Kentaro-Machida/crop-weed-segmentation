@@ -61,7 +61,7 @@ def predict(predict_config_dict: dict):
         checkpoint_path=model_path,
         config=model_dataset_config,
         label_dict=label_dict
-    )
+    ).to("cpu")
 
     logger.info("Model and dataset prepared. Beginning prediction.")
     image_paths, _ = model_dataset.get_image_mask_paths("test")
@@ -82,6 +82,7 @@ def predict(predict_config_dict: dict):
         input_image_name = image_paths[i].split("/")[-1]
         input_image_path = os.path.join(output_save_dir, input_image_name)
         logger.info(f"Saving input image to: {input_image_path}")
+        input_image = cv2.cvtColor(input_image, cv2.COLOR_RGB2BGR)
         cv2.imwrite(input_image_path, input_image)
         
         # Save overlayed ground truth mask
