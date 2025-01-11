@@ -124,8 +124,10 @@ class UNetppLightning(LightningModule):
                 self.criterion = torch.nn.CrossEntropyLoss()
             else:
                 self.criterion = torch.nn.BCEWithLogitsLoss()
+            self.loss_func = self._get_cross_entropy_loss
         elif config.criterion == "dice":
-            self.criterion = smp.losses.DiceLoss(mode='binary' if self.num_classes == 2 else 'multiclass')
+            self.criterion = smp.losses.DiceLoss(mode='binary' if self.num_classes == 2 else 'multiclass', from_logits=True)
+            self.loss_func = self._get_dice_loss
 
     def forward(self, x):
         return self.model(x)
@@ -133,7 +135,7 @@ class UNetppLightning(LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
-        loss = self.criterion(y_hat, y)
+        loss = self.loss_func(y_hat, y)
         self.log('train_loss', loss, on_epoch=True)
 
         self._record_iou(y_hat, y, "train")
@@ -142,7 +144,7 @@ class UNetppLightning(LightningModule):
     def validation_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
-        loss = self.criterion(y_hat, y)
+        loss = self.loss_func(y_hat, y)
         self.log('val_loss', loss, on_epoch=True)
 
         self._record_iou(y_hat, y, "val")
@@ -151,7 +153,7 @@ class UNetppLightning(LightningModule):
     def test_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
-        loss = self.criterion(y_hat, y)
+        loss = self.loss_func(y_hat, y)
         self.log('test_loss', loss, on_epoch=True)
 
         self._record_iou(y_hat, y, "test")
@@ -172,6 +174,26 @@ class UNetppLightning(LightningModule):
         iou_scores = jaccard_index(y_hat_class, y, task='multiclass', num_classes=len(self.label_dict), average=None)
         for label, i in self.label_dict.items():
             self.log(f'{step}_IoU_{label}', iou_scores[i], on_epoch=True)
+
+    def _get_cross_entropy_loss(self, y_hat, y):
+        """
+        y_hat(logit): torch.Size([N, num_classes, H, W], dtype=torch.float)
+        y: torch.Size([N, num_classes, H, W], dtype=torch.float)
+        """
+        y_hat = y_hat.to(torch.float)
+        y = y.to(torch.float)
+        return self.criterion(y_hat, y)
+    
+    def _get_dice_loss(self, y_hat, y):
+        """
+        y_hat(logit): torch.Size([N, num_classes, H, W], dtype=torch.float)
+        y: torch.Size([N, num_classes, H, W], dtype=int)
+        """
+        y_hat = y_hat.to(torch.float)
+        y = y.to(torch.long)
+        # CHW -> HW
+        y = y.argmax(dim=1)
+        return self.criterion(y_hat, y)
         
 
 class CNNDataset(BaseDataset):
@@ -220,7 +242,7 @@ class CNNDataset(BaseDataset):
 
         # マスクの変換とエンコーディング
         # (H, W) -> (num_classes, H, W)に変換
-        mask = torch.nn.functional.one_hot(mask, num_classes=self.num_classes).permute(2, 0, 1).float()
+        mask = torch.nn.functional.one_hot(mask, num_classes=self.num_classes).permute(2, 0, 1).int()
 
         return img, mask
     
