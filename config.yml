@@ -51,13 +51,13 @@ experiment:
 
 # Config for predict.py
 predict:
-  data_root_path: ./src/pkgs/datasets/test_dataset
+  data_root_path: ./src/pkgs/datasets/test_dataset  # 推論に使用するデータセットのルート
   tracking_dir: "./mlruns"
   task: crop  # plant | crop | 3_classes | 5_classes
 
   one_model_config:
-    experiment_id: "865153750648612543"
-    run_id: 1b50882c57fe4eabb4dfa9d24e13c833
+    experiment_id: "865153750648612543"  # ダブルクォーテーションで囲む
+    run_id: "bcf9d965735f4ec4962da9590d3ecb87"  # ダブルクォーテーションで囲む
 
   crop_weed_model_config:
     crop_experiment_id: 427360906595973495
