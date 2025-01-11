@@ -2,6 +2,45 @@ import os
 import cv2
 import numpy as np
 
+
+class LabelConverter:
+    def __init__(self):
+        self._task_label_dict = {
+        "3_classes": {'background': 0, 'crop': 1, 'weed': 2},
+        "plant": {'background': 0, 'plant': 1},
+        "crop": {'background': 0, 'crop': 1},
+        "5_classes": {'background': 0, 'crop': 1, 'weed1_broad': 2, 'weed2_cyperaceae': 3, 'weed3_aquatic': 4}
+    }
+        
+    def task_to_label_dict(self, task: str)->dict:
+        """
+        このリポジトリ全体で使用されるtaskとlabel_dictの対応を返す関数
+        Args:
+            task (str): crop | plant | all
+        Returns:
+            dict: 画像の整数とラベルの対応
+        """
+        task_label_dict = {
+            "3_classes": {'background': 0, 'crop': 1, 'weed': 2},
+            "plant": {'background': 0, 'plant': 1},
+            "crop": {'background': 0, 'crop': 1},
+            "5_classes": {'background': 0, 'crop': 1, 'weed1_broad': 2, 'weed2_cyperaceae': 3, 'weed3_aquatic': 4}
+        }
+        if task == "3_classes":
+            return task_label_dict["3_classes"]
+        elif task == "plant":
+            return task_label_dict["plant"]
+        elif task == "crop":
+            return task_label_dict["crop"]
+        elif task == "5_classes":
+            return task_label_dict["5_classes"]
+        else:
+            raise ValueError(f"task: {task} is not supported.")
+        
+    def get_task_label_dict(self)->dict:
+        return self._task_label_dict
+
+
 def get_image_path(
         target_dir:str,
         extensions=[".jpg", ".png", ".JPG", ".JPEG", ".PNG"]
@@ -44,19 +83,56 @@ def load_mask(
     Return mask as 3d np.ndarray.
     task: If "plant", return mask as Anything other than 0 is 1, and 0 is 0.
     If "crop", return mask as Anything other than 1 is 0, and 1 is 1.
-    If "all", return mask as 3 classes mask.
+    If "3_classes", return mask as 3 classes (0, 1, the others) mask.
+    If "5_classes", return mask as 5 classes
     """
     mask = cv2.imread(path)
     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
-    if task == "plant1d" or task == "plant2d" or task == "plant":
-        mask = mask[:,:,0] != 0
+    label_converter = LabelConverter()
+    task_label_dict = label_converter.get_task_label_dict()
+    label_dict = task_label_dict[task]
+
+    if task == "plant":
+        # backgroundクラス以外を1に、backgroundクラスを0にする
+        background_label = label_dict['background']
+        
+        mask = mask[:,:,0] != background_label
         mask = mask[:,:,np.newaxis]
-    elif task == "all":
+
+    elif task == "3_classes":
+        # backgroundクラスを0に、cropクラスを1に、それ以外をweedクラスにする
+        background_label = label_dict['background']
         mask = mask[:,:,0]
+        mask[mask == background_label] = 0
+        crop_label = label_dict['crop']
+
+        mask[mask == crop_label] = 1
+        mask[mask != 0] = 2
         mask = mask[:,:,np.newaxis]
+
     elif task == "crop":
-        mask = mask[:,:,0] == 1
+        # cropクラスを1に、それ以外を0にする
+        crop_label = label_dict['crop']
+
+        mask = mask[:,:,0] == crop_label
         mask = mask[:,:,np.newaxis]
+
+    elif task == "5_classes":
+        # 全てのクラスをそのまま使用
+        background_label = label_dict['background']
+        crop_label = label_dict['crop']
+        weed1_label = label_dict['weed1_broad']
+        weed2_label = label_dict['weed2_cyperaceae']
+        weed3_label = label_dict['weed3_aquatic']
+
+        mask = mask[:,:,0]
+        mask[mask == background_label] = 0
+        mask[mask == crop_label] = 1
+        mask[mask == weed1_label] = 2
+        mask[mask == weed2_label] = 3
+        mask[mask == weed3_label] = 4
+        mask = mask[:,:,np.newaxis]
+        
     else:
         raise ValueError(f"task: {task} is not supported")
     mask = mask.astype(np.uint8)

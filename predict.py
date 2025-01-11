@@ -9,8 +9,7 @@ import logging
 
 from src.pkgs.data_classes.config_class import ExperimentConfig
 from src.pkgs.model_datasets.model_dataset_factory import ModelDatasetFactory
-from src.utils.class_labels import task_to_label_dict
-from src.utils.data_loads import load_image
+from src.utils.data_loads import load_image, LabelConverter
 from src.utils.visualize import save_overlayed_image
 
 # ロガーの設定
@@ -42,7 +41,8 @@ def predict(predict_config_dict: dict):
     
     experiment_config = ExperimentConfig.from_dict(train_config["experiment"])
     model_dataset_config = experiment_config.modeldataset_config
-    label_dict = task_to_label_dict(experiment_config.task)
+    label_converter = LabelConverter()
+    label_dict = label_converter.task_to_label_dict(experiment_config.task)
 
     logger.info("Setting up ModelDatasetFactory")
     model_dataset_factory = ModelDatasetFactory(

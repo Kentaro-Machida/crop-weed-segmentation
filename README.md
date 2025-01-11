@@ -1,5 +1,8 @@
 # crop-weed-segmentation
 
+## Configファイルによる実験設定
+実験の設定は、`config.yml`を編集することで変えることができる。主な設定項目はconfig.ymlにコメントとして残しているが、
+
 ## モデルの学習
 ```
 python train.py

@@ -136,7 +136,7 @@ class ExperimentConfig(BaseModel):
     
     @field_validator("task")
     def check_task(cls, v):
-        allowed = ["all", "plant", "crop"]
+        allowed = ["3_classes","5_classes", "plant", "crop"]
         if v not in allowed:
             raise ValueError(f"task is '{v}', it should be one of {allowed}.")
         return v

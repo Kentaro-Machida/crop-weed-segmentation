@@ -2,7 +2,7 @@
 experiment:
   data_root_path: ./datasets/v1_Easy.v2i.png-mask-semantic
   modeldataset_type: cnn  # transformer | cnn | patch1d | patch2d | two
-  task: crop  # plant | crop | all
+  task: 5_classes  # plant | crop | 3_classes | 5_classes
   device: gpu  # cpu | gpu | tpu | hpu | auto
   train_config:
     max_epochs: 50
@@ -54,8 +54,8 @@ predict:
   task: crop  # plant | crop | all | crop_weed
 
   one_model_config:
-    experiment_id: "536188172231323112"
-    run_id: 6012dc9d00f74cf3a9757a6ca0197914
+    experiment_id: "640608916892225981"
+    run_id: 268e700dd5204c1ab8b1e12b94cc8354
 
   crop_weed_model_config:
     crop_experiment_id: 427360906595973495

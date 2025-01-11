@@ -2,6 +2,7 @@ import mlflow
 from mlflow import MlflowClient
 from lightning.pytorch import Trainer
 import yaml
+import os
 import tempfile
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 
@@ -83,6 +84,9 @@ def train(yaml_path: str, tempdir: str):
         # アーティファクトにモデルを保存
         mlflow.log_artifact(local_path=best_model_path)
         trainer.test(dataloaders=test_loader, ckpt_path=best_model_path)
+
+        # best_modeL_pathのファイルを削除
+        os.remove(best_model_path)
     
     print_auto_logged_info(mlflow.get_run(run_id=run.info.run_id))
 
