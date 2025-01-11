@@ -69,9 +69,9 @@ def predict(predict_config_dict: dict):
     for i, (tensor, mask) in enumerate(dataset):
         logger.info(f"Processing image {i + 1}/{len(dataset)}")
         tensor = tensor.unsqueeze(0)
-        mask_2d = mask.argmax(dim=0).numpy()  # mask_2d: numpy.shape ([224, 224])
-        pred = model(tensor)[0]  # pred: torch.Size([2, 224, 224])
-        pred_mask_2d = pred.argmax(dim=0).numpy()  # pred_2d: numpy.shape ([224, 224])
+        mask = mask.numpy()  # size: (height, widht)
+        pred = model(tensor)[0]  # pred: torch.Size([c, height, width])
+        pred_mask_2d = pred.argmax(dim=0).numpy()  # pred_2d: numpy.shape ([height, width])
         input_image = load_image(
             path=image_paths[i],
             reseized_height=model_dataset_config.image_height,
@@ -91,7 +91,7 @@ def predict(predict_config_dict: dict):
         logger.info(f"Saving ground truth overlayed image to: {ground_truth_path}")
         save_overlayed_image(
             img=input_image,
-            mask=mask_2d,
+            mask=mask,
             save_path=ground_truth_path
         )
 

@@ -56,9 +56,9 @@ class CNNModelDataset(BaseModelDataset):
 
         return {
             "model": self.model,
-            "train_loader": DataLoader(self._train_dataset, self.batch_size),
-            "val_loader": DataLoader(self._val_dataset, self.batch_size),
-            "test_loader": DataLoader(self._test_dataset, self.batch_size)
+            "train_loader": DataLoader(self._train_dataset, self.batch_size, num_workers=2),
+            "val_loader": DataLoader(self._val_dataset, self.batch_size, num_workers=2),
+            "test_loader": DataLoader(self._test_dataset, self.batch_size, num_workers=2)
         }
 
     def _get_image_mask_paths(self, data_root_path:str, phase:str) -> tuple:
@@ -170,7 +170,8 @@ class UNetppLightning(LightningModule):
     
     def _record_iou(self, y_hat, y, step:str):
         # IoUを計算して記録
-        y_hat_class = (torch.sigmoid(y_hat) > 0.5).float()
+        y_hat_probs = torch.softmax(y_hat, dim=1)  # 確率分布を計算
+        y_hat_class = torch.argmax(y_hat_probs, dim=1)
         iou_scores = jaccard_index(y_hat_class, y, task='multiclass', num_classes=len(self.label_dict), average=None)
         for label, i in self.label_dict.items():
             self.log(f'{step}_IoU_{label}', iou_scores[i], on_epoch=True)
@@ -191,8 +192,7 @@ class UNetppLightning(LightningModule):
         """
         y_hat = y_hat.to(torch.float)
         y = y.to(torch.long)
-        # CHW -> HW
-        y = y.argmax(dim=1)
+    
         return self.criterion(y_hat, y)
         
 
@@ -239,10 +239,6 @@ class CNNDataset(BaseDataset):
 
         img = torch.from_numpy(img).float().permute(2, 0, 1) / 255  # HWC -> CHW
         mask = torch.from_numpy(mask).long()
-
-        # マスクの変換とエンコーディング
-        # (H, W) -> (num_classes, H, W)に変換
-        mask = torch.nn.functional.one_hot(mask, num_classes=self.num_classes).permute(2, 0, 1).int()
 
         return img, mask
     

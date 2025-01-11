@@ -51,11 +51,11 @@ experiment:
 predict:
   data_root_path: ./src/pkgs/datasets/test_dataset
   tracking_dir: "./mlruns"
-  task: crop  # plant | crop | all | crop_weed
+  task: crop  # plant | crop | 3_classes | 5_classes
 
   one_model_config:
-    experiment_id: "739706936508415781"
-    run_id: 85d28b3c8b1a4a6dad4d13d6ed1c5eac
+    experiment_id: "865153750648612543"
+    run_id: 3a4fd03b706141c4a21d720e0339dbea
 
   crop_weed_model_config:
     crop_experiment_id: 427360906595973495
