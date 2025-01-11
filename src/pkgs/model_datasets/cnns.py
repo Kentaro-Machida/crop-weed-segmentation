@@ -15,12 +15,11 @@ class CNNModelDataset(BaseModelDataset):
     """
     CNNモデルとそれに対応するデータセットを用意するクラス
     """
-    def __init__(self, config: ModelDatasetConfig, data_root_path: str, load_mask_func: callable, label_dict:dict):
+    def __init__(self, config: ModelDatasetConfig, data_root_path: str, load_mask_func: callable, label_dict:dict, data_augmentator):
         super().__init__(config)
         self.model = UNetppLightning(config, label_dict=label_dict)
 
         # 以下はModelDataset系統クラスにおいて共通の処理
-        data_augmentator = DataTransformBuilder(config.data_augmentation_config)
         self.load_mask_func = load_mask_func
         self.label_dict = label_dict
 
@@ -169,7 +168,6 @@ class UNetppLightning(BaseLightningModule):
         optimizer = torch.optim.Adam(self.parameters(), lr=0.001, weight_decay=1e-5)  # weight decay added
         return optimizer
     
-
     def _get_cross_entropy_loss(self, y_hat, y):
         """
         y_hat(logit): torch.Size([N, num_classes, H, W], dtype=torch.float)
@@ -231,7 +229,7 @@ class CNNDataset(BaseDataset):
             img = augmented["image"]
             mask = augmented["mask"]
 
-        img = torch.from_numpy(img).float().permute(2, 0, 1) / 255  # HWC -> CHW
+        img = torch.from_numpy(img).float().permute(2, 0, 1)
         mask = torch.from_numpy(mask).long()
 
         return img, mask

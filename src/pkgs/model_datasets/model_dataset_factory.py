@@ -2,6 +2,7 @@ from functools import partial
 
 from src.pkgs.data_classes.config_class import ModelDatasetConfig
 from src.pkgs.model_datasets.transformer import TransformerModelDataset
+from src.pkgs.preproceses.data_augmentation import DataTransformBuilder
 from src.pkgs.model_datasets.patches import Patch2dModelDataset
 from src.pkgs.model_datasets.cnns import CNNModelDataset
 from src.utils.data_loads import load_mask, LabelConverter
@@ -35,13 +36,14 @@ class ModelDatasetFactory:
 
         Returns:
             dict: {"model":model, "train_loader":train_loader, "val_loader":val_loader, "test_loader":test_loader}
-        """        
+        """ 
+        data_augmentator = DataTransformBuilder(self.config.data_augmentation_config, self.model_dataset_type)
         if self.model_dataset_type == "transformer":
-            modeldataset = TransformerModelDataset(self.config, self.data_root_path)
+            modeldataset = TransformerModelDataset(self.config, self.data_root_path, self.load_mask_func, self.label_dict, data_augmentator)
         elif self.model_dataset_type == "patch2d":
             modeldataset = Patch2dModelDataset(self.config, self.data_root_path)
         elif self.model_dataset_type == "cnn":
-            modeldataset = CNNModelDataset(self.config, self.data_root_path, self.load_mask_func, self.label_dict)
+            modeldataset = CNNModelDataset(self.config, self.data_root_path, self.load_mask_func, self.label_dict, data_augmentator)
         else:
             raise ValueError(f"model_dataset_type: {self.model_dataset_type} is not supported.")
         return modeldataset

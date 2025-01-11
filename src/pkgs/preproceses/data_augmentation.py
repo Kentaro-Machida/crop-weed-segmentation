@@ -8,8 +8,9 @@ class DataTransformBuilder:
     Configファイルにしたがってデータ拡張を行うためのオブジェクトを生成
     ここでは入力前のNormalize処理やToTensor処理は行わない
     """
-    def __init__(self, config: DataAugmentationConfig):
+    def __init__(self, config: DataAugmentationConfig, model_dataset_type: str):
         self.config = config
+        self.model_dataset_type = model_dataset_type
 
     def __call__(self, **kwargs: Any):
         return self._build_transformer()(**kwargs)
@@ -23,8 +24,8 @@ class DataTransformBuilder:
         if self.config.horizontal_flip:
             transforms.append(A.HorizontalFlip(p=0.5))
         
-        transforms.append(A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255, p=1.0))
-            
+        if self.model_dataset_type != "transformer":
+            transforms.append(A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), max_pixel_value=255, p=1.0))
         return A.Compose(transforms)
 
 
