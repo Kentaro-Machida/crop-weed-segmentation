@@ -1,6 +1,6 @@
 # Common settings
 experiment:
-  data_root_path: ./datasets/v1_Easy.v2i.png-mask-semantic
+  data_root_path: ./datasets/v1_Easy.v2i.png-mask-semantic  # Path includes train, val and test folders
   modeldataset_type: cnn  # transformer | cnn | patch1d | patch2d | two
   task: 5_classes  # plant | crop | 3_classes | 5_classes
   device: gpu  # cpu | gpu | tpu | hpu | auto
