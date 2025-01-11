@@ -69,9 +69,9 @@ def predict(predict_config_dict: dict):
     for i, (tensor, mask) in enumerate(dataset):
         logger.info(f"Processing image {i + 1}/{len(dataset)}")
         tensor = tensor.unsqueeze(0)
-        mask_2d = mask.argmax(dim=0).numpy()  # mask_2d: torch.Size([224, 224])
+        mask_2d = mask.argmax(dim=0).numpy()  # mask_2d: numpy.shape ([224, 224])
         pred = model(tensor)[0]  # pred: torch.Size([2, 224, 224])
-        pred_mask_2d = pred.argmax(dim=0)  # pred_2d: torch.Size([224, 224])
+        pred_mask_2d = pred.argmax(dim=0).numpy()  # pred_2d: numpy.shape ([224, 224])
         input_image = load_image(
             path=image_paths[i],
             reseized_height=model_dataset_config.image_height,
