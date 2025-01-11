@@ -25,9 +25,9 @@ def overlay_mask_to_image(
 
     # Define a color map for mask values (1-10)
     color_map = {
-        1: (255, 0, 0),    # Red
+        1: (0, 0, 255),    # Blue
         2: (0, 255, 0),    # Green
-        3: (0, 0, 255),    # Blue
+        3: (255, 0, 0),    # Red
         4: (255, 255, 0),  # Yellow
         5: (255, 0, 255),  # Magenta
         6: (0, 255, 255),  # Cyan
@@ -43,6 +43,8 @@ def overlay_mask_to_image(
     # Assign colors based on mask values
     for value, color in color_map.items():
         overlay[mask == value] = color
+    # BGR -> RGB
+    overlay = cv2.cvtColor(overlay, cv2.COLOR_BGR2RGB)
 
 
     # Blend the original image and the overlay
