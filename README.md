@@ -1,5 +1,16 @@
 # crop-weed-segmentation
 
+## 環境構築
+以下のコマンドでインストールしてください。環境によっては、入らないかもしれないので、その場合は、一つずつインストールしてください。
+```
+pip install -r requirements.lock
+```
+主に使用しているライブラリは以下の通り。
+* pytorch
+* pytorch lightning
+* transformers
+* mlflow
+
 ## Configファイルによる実験設定
 実験の設定は、`config.yml`を編集することで変えることができる。主な設定項目はconfig.ymlにコメントとして残しているが、わかりづらいものだけここで説明。
 * modeldataset_type: 使用するモデルのタイプを指定。それぞれの詳細設定は、cnnならcnn_setting、patch2dならpatch2d_settingなどで管理している
