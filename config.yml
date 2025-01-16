@@ -57,7 +57,7 @@ predict:
 
   one_model_config:
     experiment_id: "865153750648612543"  # ダブルクォーテーションで囲む
-    run_id: "bcf9d965735f4ec4962da9590d3ecb87"  # ダブルクォーテーションで囲む
+    run_id: "53c9c8333c78423db732c2489c411dc1"  # ダブルクォーテーションで囲む
 
   crop_weed_model_config:
     crop_experiment_id: 427360906595973495

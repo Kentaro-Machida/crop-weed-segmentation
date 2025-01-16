@@ -7,6 +7,7 @@ class LabelConverter:
     def __init__(self):
         self._task_label_dict = {
         "3_classes": {'background': 0, 'crop': 1, 'weed': 2},
+        "4_classes": {'background': 0, 'crop': 1, 'weed1_broad': 2, 'weed2_cyperaceae': 3},
         "plant": {'background': 0, 'plant': 1},
         "crop": {'background': 0, 'crop': 1},
         "5_classes": {'background': 0, 'crop': 1, 'weed1_broad': 2, 'weed2_cyperaceae': 3, 'weed3_aquatic': 4}
@@ -20,23 +21,17 @@ class LabelConverter:
         Returns:
             dict: 画像の整数とラベルの対応
         """
-        task_label_dict = {
-            "3_classes": {'background': 0, 'crop': 1, 'weed': 2},
-            "plant": {'background': 0, 'plant': 1},
-            "crop": {'background': 0, 'crop': 1},
-            "4_classes": {'background': 0, 'crop': 1, 'weed1_broad': [2,4], 'weed2_cyperaceae': 3},
-            "5_classes": {'background': 0, 'crop': 1, 'weed1_broad': 2, 'weed2_cyperaceae': 3, 'weed3_aquatic': 4}
-        }
+    
         if task == "3_classes":
-            return task_label_dict["3_classes"]
+            return self._task_label_dict["3_classes"]
         elif task == "plant":
-            return task_label_dict["plant"]
+            return self._task_label_dict["plant"]
         elif task == "crop":
-            return task_label_dict["crop"]
+            return self._task_label_dict["crop"]
         elif task == "4_classes":
-            return task_label_dict["4_classes"]
+            return self._task_label_dict["4_classes"]
         elif task == "5_classes":
-            return task_label_dict["5_classes"]
+            return self._task_label_dict["5_classes"]
         else:
             raise ValueError(f"task: {task} is not supported.")
         
@@ -124,9 +119,9 @@ def load_mask(
         # weed3_aquaticクラスをweed1_broadクラスに統合
         background_label = label_dict['background']
         crop_label = label_dict['crop']
-        weed1_label = label_dict['weed1_broad'][0]
+        weed1_label = label_dict['weed1_broad']
         weed2_label = label_dict['weed2_cyperaceae']
-        weed3_label = label_dict['weed1_broad'][1]
+        weed3_label = 4  # 応急処置的にweed3_labelを4に設定
 
         mask = mask[:,:,0]
         mask[mask == background_label] = 0
