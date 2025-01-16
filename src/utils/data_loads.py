@@ -24,6 +24,7 @@ class LabelConverter:
             "3_classes": {'background': 0, 'crop': 1, 'weed': 2},
             "plant": {'background': 0, 'plant': 1},
             "crop": {'background': 0, 'crop': 1},
+            "4_classes": {'background': 0, 'crop': 1, 'weed1_broad': [2,4], 'weed2_cyperaceae': 3},
             "5_classes": {'background': 0, 'crop': 1, 'weed1_broad': 2, 'weed2_cyperaceae': 3, 'weed3_aquatic': 4}
         }
         if task == "3_classes":
@@ -32,6 +33,8 @@ class LabelConverter:
             return task_label_dict["plant"]
         elif task == "crop":
             return task_label_dict["crop"]
+        elif task == "4_classes":
+            return task_label_dict["4_classes"]
         elif task == "5_classes":
             return task_label_dict["5_classes"]
         else:
@@ -115,6 +118,22 @@ def load_mask(
         crop_label = label_dict['crop']
 
         mask = mask[:,:,0] == crop_label
+        mask = mask[:,:,np.newaxis]
+
+    elif task == "4_classes":
+        # weed3_aquaticクラスをweed1_broadクラスに統合
+        background_label = label_dict['background']
+        crop_label = label_dict['crop']
+        weed1_label = label_dict['weed1_broad'][0]
+        weed2_label = label_dict['weed2_cyperaceae']
+        weed3_label = label_dict['weed1_broad'][1]
+
+        mask = mask[:,:,0]
+        mask[mask == background_label] = 0
+        mask[mask == crop_label] = 1
+        mask[mask == weed1_label] = 2
+        mask[mask == weed3_label] = 2
+        mask[mask == weed2_label] = 3
         mask = mask[:,:,np.newaxis]
 
     elif task == "5_classes":
